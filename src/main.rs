@@ -11,8 +11,8 @@ const HALF_HEIGHT: i32 = WINDOW_HEIGHT / 2;
 
 const LANE_WIDTH: i32 = 16;
 
-const TOP_SPEED: i32 = 2;
-const DEFAULT_SPEED: i32 = 1;
+const TOP_SPEED: i32 = 8;
+const DEFAULT_SPEED: i32 = 2;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 enum Airt {
@@ -364,7 +364,7 @@ fn main() {
     let mut event_pump = sdl_context.event_pump().unwrap();
 
     let mut last_keypress_time = Instant::now();
-    let keypress_interval = Duration::from_millis(200);
+    let keypress_interval = Duration::from_millis(8);
 
     let mut cars: Vec<Car> = Vec::new();
 
