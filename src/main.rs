@@ -11,8 +11,8 @@ const HALF_HEIGHT: i32 = WINDOW_HEIGHT / 2;
 
 const LANE_WIDTH: i32 = 16;
 
-const TOP_SPEED: i32 = 8;
-const DEFAULT_SPEED: i32 = 4;
+const TOP_SPEED: i32 = 2;
+const DEFAULT_SPEED: i32 = 1;
 
 #[derive(Debug, PartialEq)]
 enum Airt {
@@ -30,6 +30,7 @@ struct Car {
     speed: i32,
     vertical: bool,
     gone: bool,
+    index: usize,
 }
 
 struct Direction {
@@ -38,7 +39,7 @@ struct Direction {
 }
 
 impl Car {
-    fn spawn(initial_direction: Airt) -> Self {
+    fn spawn(initial_direction: Airt, index: usize) -> Self {
         let x;
         let y;
         let final_direction;
@@ -159,116 +160,143 @@ impl Car {
             speed,
             vertical,
             gone: false,
+            index,
         }
     }
 
-    fn update(&mut self) {
+    fn will_collide(
+        &self,
+        new_x: i32,
+        new_y: i32,
+        tentative_positions: &Vec<(i32, i32, usize)>,
+    ) -> bool {
+        for other in tentative_positions {
+            if other.2 == self.index {
+                continue;
+            }
+            if new_x < other.0 + LANE_WIDTH
+                && new_x + LANE_WIDTH > other.0
+                && new_y < other.1 + LANE_WIDTH
+                && new_y + LANE_WIDTH > other.1
+            {
+                return true;
+            }
+        }
+        false
+    }
+
+    fn update(&mut self, tentative_positions: &mut Vec<(i32, i32, usize)>) -> bool {
         if self.x < 0 || self.x > 800 || self.y < 0 || self.y > 600 {
             self.gone = true;
-            return;
+            return false;
         }
+
+        let mut new_x = self.x;
+        let mut new_y = self.y;
 
         match self.direction.start {
             Airt::Up => match self.direction.end {
                 Airt::Left => {
                     if self.y > HALF_HEIGHT - LANE_WIDTH {
-                        self.y -= self.speed;
+                        new_y = self.y - self.speed;
                     } else {
                         self.vertical = false;
-                        self.x -= self.speed;
+                        new_x = self.x - self.speed;
                     }
                 }
                 Airt::Up => {
-                    self.y -= self.speed;
+                    new_y = self.y - self.speed;
                 }
                 Airt::Right => {
                     if self.y > HALF_HEIGHT + 2 * LANE_WIDTH {
-                        self.y -= self.speed;
+                        new_y = self.y - self.speed;
                     } else {
                         self.vertical = false;
-                        self.x += self.speed;
+                        new_x = self.x + self.speed;
                     }
                 }
-                _ => {
-                    panic!("Invalid turn");
-                }
+                _ => panic!("Invalid turn"),
             },
-
             Airt::Down => match self.direction.end {
                 Airt::Left => {
                     if self.y < HALF_HEIGHT - 3 * LANE_WIDTH {
-                        self.y += self.speed;
+                        new_y = self.y + self.speed;
                     } else {
-                        self.x -= self.speed;
+                        new_x = self.x - self.speed;
                         self.vertical = false;
                     }
                 }
                 Airt::Down => {
-                    self.y += self.speed;
+                    new_y = self.y + self.speed;
                 }
                 Airt::Right => {
                     if self.y < HALF_HEIGHT {
-                        self.y += self.speed;
+                        new_y = self.y + self.speed;
                     } else {
-                        self.x += self.speed;
+                        new_x = self.x + self.speed;
                         self.vertical = false;
                     }
                 }
-                _ => {
-                    panic!("Invalid turn");
-                }
+                _ => panic!("Invalid turn"),
             },
-
             Airt::Left => match self.direction.end {
                 Airt::Up => {
                     if self.x > HALF_WIDTH + 2 * LANE_WIDTH {
-                        self.x -= self.speed;
+                        new_x = self.x - self.speed;
                     } else {
                         self.vertical = true;
-                        self.y -= self.speed;
+                        new_y = self.y - self.speed;
                     }
                 }
                 Airt::Left => {
-                    self.x -= self.speed;
+                    new_x = self.x - self.speed;
                 }
                 Airt::Down => {
                     if self.x > HALF_WIDTH - LANE_WIDTH {
-                        self.x -= self.speed;
+                        new_x = self.x - self.speed;
                     } else {
                         self.vertical = true;
-                        self.y += self.speed;
+                        new_y = self.y + self.speed;
                     }
                 }
-                _ => {
-                    panic!("Invalid turn");
-                }
+                _ => panic!("Invalid turn"),
             },
-
             Airt::Right => match self.direction.end {
                 Airt::Up => {
                     if self.x < HALF_WIDTH {
-                        self.x += self.speed;
+                        new_x = self.x + self.speed;
                     } else {
                         self.vertical = true;
-                        self.y -= self.speed;
+                        new_y = self.y - self.speed;
                     }
                 }
                 Airt::Right => {
-                    self.x += self.speed;
+                    new_x = self.x + self.speed;
                 }
                 Airt::Down => {
                     if self.x < HALF_WIDTH - 3 * LANE_WIDTH {
-                        self.x += self.speed;
+                        new_x = self.x + self.speed;
                     } else {
                         self.vertical = true;
-                        self.y += self.speed;
+                        new_y = self.y + self.speed;
                     }
                 }
-                _ => {
-                    panic!("Invalid turn");
-                }
+                _ => panic!("Invalid turn"),
             },
         }
+
+        if self.will_collide(new_x, new_y, tentative_positions) {
+            return false;
+        }
+
+        // Update tentative positions
+        tentative_positions[self.index] = (new_x, new_y, self.index);
+
+        // Apply final movement
+        self.x = new_x;
+        self.y = new_y;
+
+        return true;
     }
 
     fn draw(&mut self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) {
@@ -311,38 +339,63 @@ fn main() {
         ddpi, hdpi, vdpi
     );
 
-    let display_mode = video_subsystem.current_display_mode(0).unwrap();
-    let screen_width = display_mode.w;
-    let screen_height = display_mode.h;
+    // let display_mode = video_subsystem.current_display_mode(0).unwrap();
+    // let screen_width = display_mode.w;
+    // let screen_height = display_mode.h;
 
-    let width = (screen_width as f32 * 0.8) as u32;
-    let height = (screen_height as f32 * 0.8) as u32;
+    // let width = (screen_width as f32 * 0.8) as u32;
+    // let height = (screen_height as f32 * 0.8) as u32;
 
     let window = video_subsystem
-        .window("᛫᛬ᚱᚫᛁᛞᛟ᛬ᛊᛗᚫᚱᛏᛟ᛬᛫", width, height)
+        .window(
+            "᛫᛬ᚱᚫᛁᛞᛟ᛬ᛊᛗᚫᚱᛏᛟ᛬᛫",
+            WINDOW_WIDTH as u32,
+            WINDOW_HEIGHT as u32,
+        )
         .position_centered()
         .build()
         .unwrap();
 
     let mut canvas = window.into_canvas().build().unwrap();
-    canvas.set_logical_size(width, height).unwrap();
+    // canvas
+    //     .set_logical_size(WINDOW_WIDTH, WINDOW_HEIGHT)
+    //     .unwrap();
 
     let mut event_pump = sdl_context.event_pump().unwrap();
 
     let mut last_keypress_time = Instant::now();
     let keypress_interval = Duration::from_millis(200);
 
-    let mut cars = Vec::new();
+    let mut cars: Vec<Car> = Vec::new();
 
     'running: loop {
         std::thread::sleep(std::time::Duration::from_millis(4));
 
+        for (i, car) in cars.iter().enumerate() {
+            assert!(
+                car.index == i,
+                "Mismatch: car.index {} does not match position {}",
+                car.index,
+                i
+            );
+        }
+
         render(&mut canvas, &mut cars);
 
-        for car in &mut cars {
-            car.update();
+        let mut tentative_positions = cars
+            .iter()
+            .map(|car| (car.x, car.y, car.index))
+            .collect::<Vec<(i32, i32, usize)>>();
+
+        for car in cars.iter_mut() {
+            car.update(&mut tentative_positions);
         }
+
         cars.retain(|car| !car.gone);
+
+        for (index, car) in cars.iter_mut().enumerate() {
+            car.index = index;
+        }
 
         for event in event_pump.poll_iter() {
             match event {
@@ -359,10 +412,10 @@ fn main() {
 
                     if now.duration_since(last_keypress_time) >= keypress_interval {
                         match keycode {
-                            Keycode::Up => cars.push(Car::spawn(Airt::Up)),
-                            Keycode::Down => cars.push(Car::spawn(Airt::Down)),
-                            Keycode::Left => cars.push(Car::spawn(Airt::Left)),
-                            Keycode::Right => cars.push(Car::spawn(Airt::Right)),
+                            Keycode::Up => cars.push(Car::spawn(Airt::Up, cars.len())),
+                            Keycode::Down => cars.push(Car::spawn(Airt::Down, cars.len())),
+                            Keycode::Left => cars.push(Car::spawn(Airt::Left, cars.len())),
+                            Keycode::Right => cars.push(Car::spawn(Airt::Right, cars.len())),
                             _ => {}
                         }
                         last_keypress_time = now;
