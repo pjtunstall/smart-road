@@ -14,7 +14,7 @@ const LANE_WIDTH: i32 = 16;
 const TOP_SPEED: i32 = 2;
 const DEFAULT_SPEED: i32 = 1;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 enum Airt {
     Up,
     Down,
@@ -416,6 +416,12 @@ fn main() {
                             Keycode::Down => cars.push(Car::spawn(Airt::Down, cars.len())),
                             Keycode::Left => cars.push(Car::spawn(Airt::Left, cars.len())),
                             Keycode::Right => cars.push(Car::spawn(Airt::Right, cars.len())),
+                            Keycode::R => {
+                                let directions = [Airt::Up, Airt::Down, Airt::Left, Airt::Right];
+                                let random_direction =
+                                    directions[rand::thread_rng().gen_range(0..directions.len())];
+                                cars.push(Car::spawn(random_direction, cars.len()));
+                            }
                             _ => {}
                         }
                         last_keypress_time = now;
@@ -428,8 +434,28 @@ fn main() {
 }
 
 fn render(canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, cars: &mut Vec<Car>) {
-    canvas.set_draw_color(Color::RGB(64, 64, 64));
+    canvas.set_draw_color(Color::RGB(128, 128, 128));
     canvas.clear();
+
+    canvas.set_draw_color(Color::RGB(64, 64, 64));
+    canvas
+        .fill_rect(sdl2::rect::Rect::new(
+            HALF_WIDTH - 3 * LANE_WIDTH,
+            0,
+            6 * LANE_WIDTH as u32,
+            WINDOW_HEIGHT as u32,
+        ))
+        .unwrap();
+
+    canvas.set_draw_color(Color::RGB(64, 64, 64));
+    canvas
+        .fill_rect(sdl2::rect::Rect::new(
+            0,
+            HALF_HEIGHT - 3 * LANE_WIDTH,
+            WINDOW_WIDTH as u32,
+            6 * LANE_WIDTH as u32,
+        ))
+        .unwrap();
 
     canvas.set_draw_color(Color::RGB(255, 255, 255));
 
