@@ -6,17 +6,13 @@ use sdl2::{event::Event, keyboard::Keycode, pixels::Color};
 
 const WINDOW_WIDTH: i32 = 800;
 const WINDOW_HEIGHT: i32 = 600;
-
 const HALF_WIDTH: i32 = WINDOW_WIDTH / 2;
 const HALF_HEIGHT: i32 = WINDOW_HEIGHT / 2;
 
 const LANE_WIDTH: i32 = 16;
 
-const CAR_WIDTH: i32 = 16;
-const CAR_HEIGHT: i32 = 16;
-
-const TOP_SPEED: i32 = 16;
-const DEFAULT_SPEED: i32 = 2;
+const TOP_SPEED: i32 = 8;
+const DEFAULT_SPEED: i32 = 4;
 
 #[derive(Debug, PartialEq)]
 enum Airt {
@@ -59,17 +55,17 @@ impl Car {
                 match r {
                     0 => {
                         x = HALF_WIDTH;
-                        y = WINDOW_HEIGHT - CAR_HEIGHT;
+                        y = WINDOW_HEIGHT - LANE_WIDTH;
                         final_direction = Airt::Left;
                     }
                     1 => {
                         x = HALF_WIDTH + LANE_WIDTH;
-                        y = WINDOW_HEIGHT - CAR_HEIGHT;
+                        y = WINDOW_HEIGHT - LANE_WIDTH;
                         final_direction = Airt::Up;
                     }
                     2 => {
                         x = HALF_WIDTH + 2 * LANE_WIDTH;
-                        y = WINDOW_HEIGHT - CAR_HEIGHT;
+                        y = WINDOW_HEIGHT - LANE_WIDTH;
                         final_direction = Airt::Right;
                         speed = TOP_SPEED;
                     }
@@ -286,15 +282,15 @@ impl Car {
         let height;
 
         if self.vertical {
-            x = self.x + CAR_WIDTH / 4 as i32;
+            x = self.x + LANE_WIDTH / 4 as i32;
             y = self.y as i32;
-            width = CAR_WIDTH as u32 / 2u32;
-            height = CAR_HEIGHT as u32;
+            width = LANE_WIDTH as u32 / 2u32;
+            height = LANE_WIDTH as u32;
         } else {
             x = self.x as i32;
-            y = self.y + CAR_HEIGHT / 4 as i32;
-            width = CAR_WIDTH as u32;
-            height = CAR_HEIGHT as u32 / 2u32;
+            y = self.y + LANE_WIDTH / 4 as i32;
+            width = LANE_WIDTH as u32;
+            height = LANE_WIDTH as u32 / 2u32;
         }
 
         canvas.set_draw_color(self.color);
@@ -308,18 +304,29 @@ impl Car {
 fn main() {
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
+    let (ddpi, hdpi, vdpi) = video_subsystem.display_dpi(0).unwrap();
+
+    println!(
+        "Diagonal DPI: {}, Horizontal DPI: {}, Vertical DPI: {}",
+        ddpi, hdpi, vdpi
+    );
+
+    let display_mode = video_subsystem.current_display_mode(0).unwrap();
+    let screen_width = display_mode.w;
+    let screen_height = display_mode.h;
+
+    let width = (screen_width as f32 * 0.8) as u32;
+    let height = (screen_height as f32 * 0.8) as u32;
 
     let window = video_subsystem
-        .window(
-            "᛫᛬ᚱᚫᛁᛞᛟ᛬ᛊᛗᚫᚱᛏᛟ᛬᛫",
-            WINDOW_WIDTH as u32,
-            WINDOW_HEIGHT as u32,
-        )
+        .window("᛫᛬ᚱᚫᛁᛞᛟ᛬ᛊᛗᚫᚱᛏᛟ᛬᛫", width, height)
         .position_centered()
         .build()
         .unwrap();
 
     let mut canvas = window.into_canvas().build().unwrap();
+    canvas.set_logical_size(width, height).unwrap();
+
     let mut event_pump = sdl_context.event_pump().unwrap();
 
     let mut last_keypress_time = Instant::now();
@@ -373,6 +380,7 @@ fn render(canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, cars: &mut Vec
 
     canvas.set_draw_color(Color::RGB(255, 255, 255));
 
+    // Center lines
     canvas
         .draw_line((HALF_WIDTH, 0), (HALF_WIDTH, WINDOW_HEIGHT))
         .unwrap();
@@ -380,8 +388,34 @@ fn render(canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, cars: &mut Vec
         .draw_line((0, HALF_HEIGHT), (WINDOW_WIDTH, HALF_HEIGHT))
         .unwrap();
 
+    // Outer lines
+    canvas
+        .draw_line(
+            (HALF_WIDTH - 3 * LANE_WIDTH, 0),
+            (HALF_WIDTH - 3 * LANE_WIDTH, WINDOW_HEIGHT),
+        )
+        .unwrap();
+    canvas
+        .draw_line(
+            (0, HALF_HEIGHT - 3 * LANE_WIDTH),
+            (WINDOW_WIDTH, HALF_HEIGHT - 3 * LANE_WIDTH),
+        )
+        .unwrap();
+    canvas
+        .draw_line(
+            (HALF_WIDTH + 3 * LANE_WIDTH, 0),
+            (HALF_WIDTH + 3 * LANE_WIDTH, WINDOW_HEIGHT),
+        )
+        .unwrap();
+    canvas
+        .draw_line(
+            (0, HALF_HEIGHT + 3 * LANE_WIDTH),
+            (WINDOW_WIDTH, HALF_HEIGHT + 3 * LANE_WIDTH),
+        )
+        .unwrap();
+
     // Draw lane markers
-    for i in 0..4 {
+    for i in 1..3 {
         draw_line(
             canvas,
             (HALF_WIDTH - LANE_WIDTH * i, 0),
