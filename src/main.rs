@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 use rand::Rng;
+use std::time::{Duration, Instant};
+
 use sdl2::{event::Event, keyboard::Keycode, pixels::Color};
 
 const WINDOW_WIDTH: i32 = 800;
@@ -13,7 +15,8 @@ const LANE_WIDTH: i32 = 16;
 const CAR_WIDTH: i32 = 16;
 const CAR_HEIGHT: i32 = 16;
 
-const TOP_SPEED: i32 = 8;
+const TOP_SPEED: i32 = 16;
+const DEFAULT_SPEED: i32 = 2;
 
 #[derive(Debug, PartialEq)]
 enum Airt {
@@ -29,6 +32,8 @@ struct Car {
     color: Color,
     direction: Direction,
     speed: i32,
+    vertical: bool,
+    gone: bool,
 }
 
 struct Direction {
@@ -42,12 +47,14 @@ impl Car {
         let y;
         let final_direction;
         let color;
-        let mut speed = 1;
+        let mut speed = DEFAULT_SPEED;
+        let vertical;
 
         let r = rand::thread_rng().gen_range(0..3);
 
         match &initial_direction {
             Airt::Up => {
+                vertical = true;
                 color = Color::RGB(255, 0, 0);
                 match r {
                     0 => {
@@ -71,7 +78,9 @@ impl Car {
                     }
                 }
             }
+
             Airt::Down => {
+                vertical = true;
                 color = Color::RGB(0, 0, 255);
                 match r {
                     0 => {
@@ -92,11 +101,54 @@ impl Car {
                     }
                 }
             }
-            _ => {
-                panic!(
-                    "Initial direction {:?} not yet implemented",
-                    initial_direction
-                );
+
+            Airt::Right => {
+                vertical = false;
+                color = Color::RGB(0, 255, 0);
+                match r {
+                    0 => {
+                        x = 0;
+                        y = HALF_HEIGHT;
+                        final_direction = Airt::Up;
+                    }
+                    1 => {
+                        x = 0;
+                        y = HALF_HEIGHT + LANE_WIDTH;
+                        final_direction = Airt::Right;
+                    }
+                    _ => {
+                        x = 0;
+                        y = HALF_HEIGHT + 2 * LANE_WIDTH;
+                        final_direction = Airt::Down;
+                        speed = TOP_SPEED;
+                    }
+                }
+            }
+
+            Airt::Left => {
+                vertical = false;
+                color = Color::RGB(255, 255, 0);
+                match r {
+                    0 => {
+                        x = WINDOW_WIDTH - LANE_WIDTH;
+                        y = HALF_HEIGHT - 3 * LANE_WIDTH;
+                        final_direction = Airt::Up;
+                        speed = TOP_SPEED;
+                    }
+                    1 => {
+                        x = WINDOW_WIDTH - LANE_WIDTH;
+                        y = HALF_HEIGHT - 2 * LANE_WIDTH;
+                        final_direction = Airt::Left;
+                    }
+                    2 => {
+                        x = WINDOW_WIDTH - LANE_WIDTH;
+                        y = HALF_HEIGHT - LANE_WIDTH;
+                        final_direction = Airt::Down;
+                    }
+                    _ => {
+                        panic!("Invalid turn");
+                    }
+                }
             }
         }
 
@@ -109,11 +161,14 @@ impl Car {
                 end: final_direction,
             },
             speed,
+            vertical,
+            gone: false,
         }
     }
 
     fn update(&mut self) {
         if self.x < 0 || self.x > 800 || self.y < 0 || self.y > 600 {
+            self.gone = true;
             return;
         }
 
@@ -123,16 +178,18 @@ impl Car {
                     if self.y > HALF_HEIGHT - LANE_WIDTH {
                         self.y -= self.speed;
                     } else {
+                        self.vertical = false;
                         self.x -= self.speed;
                     }
                 }
                 Airt::Up => {
-                    self.y -= 1;
+                    self.y -= self.speed;
                 }
                 Airt::Right => {
                     if self.y > HALF_HEIGHT + 2 * LANE_WIDTH {
                         self.y -= self.speed;
                     } else {
+                        self.vertical = false;
                         self.x += self.speed;
                     }
                 }
@@ -140,12 +197,14 @@ impl Car {
                     panic!("Invalid turn");
                 }
             },
+
             Airt::Down => match self.direction.end {
                 Airt::Left => {
                     if self.y < HALF_HEIGHT - 3 * LANE_WIDTH {
                         self.y += self.speed;
                     } else {
                         self.x -= self.speed;
+                        self.vertical = false;
                     }
                 }
                 Airt::Down => {
@@ -156,15 +215,63 @@ impl Car {
                         self.y += self.speed;
                     } else {
                         self.x += self.speed;
+                        self.vertical = false;
                     }
                 }
                 _ => {
                     panic!("Invalid turn");
                 }
             },
-            _ => {
-                panic!("Not yet implemented");
-            }
+
+            Airt::Left => match self.direction.end {
+                Airt::Up => {
+                    if self.x > HALF_WIDTH + 2 * LANE_WIDTH {
+                        self.x -= self.speed;
+                    } else {
+                        self.vertical = true;
+                        self.y -= self.speed;
+                    }
+                }
+                Airt::Left => {
+                    self.x -= self.speed;
+                }
+                Airt::Down => {
+                    if self.x > HALF_WIDTH - LANE_WIDTH {
+                        self.x -= self.speed;
+                    } else {
+                        self.vertical = true;
+                        self.y += self.speed;
+                    }
+                }
+                _ => {
+                    panic!("Invalid turn");
+                }
+            },
+
+            Airt::Right => match self.direction.end {
+                Airt::Up => {
+                    if self.x < HALF_WIDTH {
+                        self.x += self.speed;
+                    } else {
+                        self.vertical = true;
+                        self.y -= self.speed;
+                    }
+                }
+                Airt::Right => {
+                    self.x += self.speed;
+                }
+                Airt::Down => {
+                    if self.x < HALF_WIDTH - 3 * LANE_WIDTH {
+                        self.x += self.speed;
+                    } else {
+                        self.vertical = true;
+                        self.y += self.speed;
+                    }
+                }
+                _ => {
+                    panic!("Invalid turn");
+                }
+            },
         }
     }
 
@@ -173,15 +280,27 @@ impl Car {
             return;
         }
 
+        let x;
+        let y;
+        let width;
+        let height;
+
+        if self.vertical {
+            x = self.x + CAR_WIDTH / 4 as i32;
+            y = self.y as i32;
+            width = CAR_WIDTH as u32 / 2u32;
+            height = CAR_HEIGHT as u32;
+        } else {
+            x = self.x as i32;
+            y = self.y + CAR_HEIGHT / 4 as i32;
+            width = CAR_WIDTH as u32;
+            height = CAR_HEIGHT as u32 / 2u32;
+        }
+
         canvas.set_draw_color(self.color);
 
         canvas
-            .fill_rect(sdl2::rect::Rect::new(
-                self.x,
-                self.y,
-                CAR_WIDTH as u32,
-                CAR_HEIGHT as u32,
-            ))
+            .fill_rect(sdl2::rect::Rect::new(x, y, width, height))
             .unwrap();
     }
 }
@@ -203,6 +322,9 @@ fn main() {
     let mut canvas = window.into_canvas().build().unwrap();
     let mut event_pump = sdl_context.event_pump().unwrap();
 
+    let mut last_keypress_time = Instant::now();
+    let keypress_interval = Duration::from_millis(200);
+
     let mut cars = Vec::new();
 
     'running: loop {
@@ -213,6 +335,7 @@ fn main() {
         for car in &mut cars {
             car.update();
         }
+        cars.retain(|car| !car.gone);
 
         for event in event_pump.poll_iter() {
             match event {
@@ -224,11 +347,20 @@ fn main() {
                 Event::KeyDown {
                     keycode: Some(keycode),
                     ..
-                } => match keycode {
-                    Keycode::Up => cars.push(Car::spawn(Airt::Up)),
-                    Keycode::Down => cars.push(Car::spawn(Airt::Down)),
-                    _ => {}
-                },
+                } => {
+                    let now = Instant::now();
+
+                    if now.duration_since(last_keypress_time) >= keypress_interval {
+                        match keycode {
+                            Keycode::Up => cars.push(Car::spawn(Airt::Up)),
+                            Keycode::Down => cars.push(Car::spawn(Airt::Down)),
+                            Keycode::Left => cars.push(Car::spawn(Airt::Left)),
+                            Keycode::Right => cars.push(Car::spawn(Airt::Right)),
+                            _ => {}
+                        }
+                        last_keypress_time = now;
+                    }
+                }
                 _ => {}
             }
         }
@@ -236,10 +368,10 @@ fn main() {
 }
 
 fn render(canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, cars: &mut Vec<Car>) {
-    canvas.set_draw_color(Color::RGB(255, 255, 255)); // White background
+    canvas.set_draw_color(Color::RGB(64, 64, 64));
     canvas.clear();
 
-    canvas.set_draw_color(Color::RGB(0, 0, 0)); // Black lines
+    canvas.set_draw_color(Color::RGB(255, 255, 255));
 
     canvas
         .draw_line((HALF_WIDTH, 0), (HALF_WIDTH, WINDOW_HEIGHT))
