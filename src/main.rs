@@ -12,7 +12,8 @@ const HALF_HEIGHT: i32 = WINDOW_HEIGHT / 2;
 const LANE_WIDTH: i32 = 16;
 
 const TOP_SPEED: i32 = 8;
-const DEFAULT_SPEED: i32 = 2;
+const DEFAULT_SPEED: i32 = 4;
+const SLOW: i32 = 2;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 enum Airt {
@@ -58,6 +59,7 @@ impl Car {
                         x = HALF_WIDTH;
                         y = WINDOW_HEIGHT - LANE_WIDTH;
                         final_direction = Airt::Left;
+                        speed = SLOW;
                     }
                     1 => {
                         x = HALF_WIDTH + LANE_WIDTH;
@@ -95,6 +97,7 @@ impl Car {
                         x = HALF_WIDTH - LANE_WIDTH;
                         y = 0;
                         final_direction = Airt::Right;
+                        speed = SLOW;
                     }
                 }
             }
@@ -107,6 +110,7 @@ impl Car {
                         x = 0;
                         y = HALF_HEIGHT;
                         final_direction = Airt::Up;
+                        speed = SLOW;
                     }
                     1 => {
                         x = 0;
@@ -141,6 +145,7 @@ impl Car {
                         x = WINDOW_WIDTH - LANE_WIDTH;
                         y = HALF_HEIGHT - LANE_WIDTH;
                         final_direction = Airt::Down;
+                        speed = SLOW;
                     }
                     _ => {
                         panic!("Invalid turn");
@@ -198,8 +203,11 @@ impl Car {
             Airt::Up => match self.direction.end {
                 Airt::Left => {
                     if self.y > HALF_HEIGHT - LANE_WIDTH {
+                        // self.speed = rand::thread_rng().gen_range(0..16);
                         new_y = self.y - self.speed;
                     } else {
+                        // self.speed = TOP_SPEED;
+                        new_y = HALF_HEIGHT - LANE_WIDTH;
                         self.vertical = false;
                         new_x = self.x - self.speed;
                     }
@@ -211,6 +219,7 @@ impl Car {
                     if self.y > HALF_HEIGHT + 2 * LANE_WIDTH {
                         new_y = self.y - self.speed;
                     } else {
+                        new_y = HALF_HEIGHT + 2 * LANE_WIDTH;
                         self.vertical = false;
                         new_x = self.x + self.speed;
                     }
@@ -222,17 +231,22 @@ impl Car {
                     if self.y < HALF_HEIGHT - 3 * LANE_WIDTH {
                         new_y = self.y + self.speed;
                     } else {
+                        new_y = HALF_HEIGHT - 3 * LANE_WIDTH;
                         new_x = self.x - self.speed;
                         self.vertical = false;
                     }
                 }
                 Airt::Down => {
+                    // self.speed = rand::thread_rng().gen_range(0..16);
                     new_y = self.y + self.speed;
                 }
                 Airt::Right => {
                     if self.y < HALF_HEIGHT {
+                        // self.speed = rand::thread_rng().gen_range(0..16);
                         new_y = self.y + self.speed;
                     } else {
+                        // self.speed = TOP_SPEED;
+                        new_y = HALF_HEIGHT;
                         new_x = self.x + self.speed;
                         self.vertical = false;
                     }
@@ -242,8 +256,11 @@ impl Car {
             Airt::Left => match self.direction.end {
                 Airt::Up => {
                     if self.x > HALF_WIDTH + 2 * LANE_WIDTH {
+                        // self.speed = rand::thread_rng().gen_range(0..16);
                         new_x = self.x - self.speed;
                     } else {
+                        // self.speed = TOP_SPEED;
+                        new_x = HALF_WIDTH + 2 * LANE_WIDTH;
                         self.vertical = true;
                         new_y = self.y - self.speed;
                     }
@@ -253,8 +270,11 @@ impl Car {
                 }
                 Airt::Down => {
                     if self.x > HALF_WIDTH - LANE_WIDTH {
+                        // self.speed = rand::thread_rng().gen_range(0..16);
                         new_x = self.x - self.speed;
                     } else {
+                        // self.speed = TOP_SPEED;
+                        new_x = HALF_WIDTH - LANE_WIDTH;
                         self.vertical = true;
                         new_y = self.y + self.speed;
                     }
@@ -264,8 +284,11 @@ impl Car {
             Airt::Right => match self.direction.end {
                 Airt::Up => {
                     if self.x < HALF_WIDTH {
+                        // self.speed = rand::thread_rng().gen_range(0..16);
                         new_x = self.x + self.speed;
                     } else {
+                        // self.speed = TOP_SPEED;
+                        new_x = HALF_WIDTH;
                         self.vertical = true;
                         new_y = self.y - self.speed;
                     }
@@ -277,6 +300,8 @@ impl Car {
                     if self.x < HALF_WIDTH - 3 * LANE_WIDTH {
                         new_x = self.x + self.speed;
                     } else {
+                        new_x = HALF_WIDTH - 3 * LANE_WIDTH;
+                        self.speed = TOP_SPEED;
                         self.vertical = true;
                         new_y = self.y + self.speed;
                     }
@@ -364,12 +389,12 @@ fn main() {
     let mut event_pump = sdl_context.event_pump().unwrap();
 
     let mut last_keypress_time = Instant::now();
-    let keypress_interval = Duration::from_millis(8);
+    let keypress_interval = Duration::from_millis(180);
 
     let mut cars: Vec<Car> = Vec::new();
 
     'running: loop {
-        std::thread::sleep(std::time::Duration::from_millis(4));
+        std::thread::sleep(std::time::Duration::from_millis(16));
 
         for (i, car) in cars.iter().enumerate() {
             assert!(
