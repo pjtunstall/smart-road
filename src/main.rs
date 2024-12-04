@@ -11,8 +11,8 @@ const HALF_HEIGHT: i32 = WINDOW_HEIGHT / 2;
 
 const LANE_WIDTH: i32 = 16;
 
-const TOP_SPEED: i32 = 16;
-const DEFAULT_SPEED: i32 = 8;
+const FAST: i32 = 16;
+const DEFAULT: i32 = 8;
 const SLOW: i32 = 4;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -32,6 +32,7 @@ struct Car {
     vertical: bool,
     gone: bool,
     index: usize,
+    birthday: Instant,
 }
 
 struct Direction {
@@ -45,7 +46,7 @@ impl Car {
         let y;
         let final_direction;
         let color;
-        let mut speed = DEFAULT_SPEED;
+        let mut speed = DEFAULT;
         let vertical;
 
         let r = rand::thread_rng().gen_range(0..3);
@@ -70,7 +71,7 @@ impl Car {
                         x = HALF_WIDTH + 2 * LANE_WIDTH;
                         y = WINDOW_HEIGHT - LANE_WIDTH;
                         final_direction = Airt::Right;
-                        speed = TOP_SPEED;
+                        speed = FAST;
                     }
                     _ => {
                         panic!("Invalid turn");
@@ -86,7 +87,7 @@ impl Car {
                         x = HALF_WIDTH - 3 * LANE_WIDTH;
                         y = 0;
                         final_direction = Airt::Left;
-                        speed = TOP_SPEED;
+                        speed = FAST;
                     }
                     1 => {
                         x = HALF_WIDTH - 2 * LANE_WIDTH;
@@ -121,7 +122,7 @@ impl Car {
                         x = 0;
                         y = HALF_HEIGHT + 2 * LANE_WIDTH;
                         final_direction = Airt::Down;
-                        speed = TOP_SPEED;
+                        speed = FAST;
                     }
                 }
             }
@@ -134,7 +135,7 @@ impl Car {
                         x = WINDOW_WIDTH - LANE_WIDTH;
                         y = HALF_HEIGHT - 3 * LANE_WIDTH;
                         final_direction = Airt::Up;
-                        speed = TOP_SPEED;
+                        speed = FAST;
                     }
                     1 => {
                         x = WINDOW_WIDTH - LANE_WIDTH;
@@ -166,6 +167,7 @@ impl Car {
             vertical,
             gone: false,
             index,
+            birthday: Instant::now(),
         }
     }
 
@@ -194,10 +196,19 @@ impl Car {
         &mut self,
         tentative_positions: &mut Vec<(i32, i32, usize)>,
         cars_passed: &mut i32,
+        max_time: &mut Duration,
+        min_time: &mut Duration,
     ) -> bool {
         if self.x < 0 || self.x > WINDOW_WIDTH || self.y < 0 || self.y > WINDOW_HEIGHT {
             *cars_passed += 1;
             self.gone = true;
+            let elapsed = Instant::now().duration_since(self.birthday);
+            if *max_time < elapsed {
+                *max_time = elapsed;
+            }
+            if *min_time > elapsed {
+                *min_time = elapsed;
+            }
             return false;
         }
 
@@ -295,7 +306,7 @@ impl Car {
                         new_x = self.x + self.speed;
                     } else {
                         new_x = HALF_WIDTH - 3 * LANE_WIDTH;
-                        self.speed = TOP_SPEED;
+                        self.speed = FAST;
                         self.vertical = true;
                         new_y = self.y + self.speed;
                     }
@@ -383,11 +394,13 @@ fn main() {
     let mut event_pump = sdl_context.event_pump().unwrap();
 
     let mut last_keypress_time = Instant::now();
-    let keypress_interval = Duration::from_millis(64);
+    let keypress_interval = Duration::from_millis(255);
 
     let mut cars: Vec<Car> = Vec::new();
     let mut near_misses = 0;
     let mut cars_passed = 0;
+    let mut max_time = Duration::from_millis(0);
+    let mut min_time = Duration::MAX;
 
     'running: loop {
         std::thread::sleep(std::time::Duration::from_millis(16));
@@ -409,7 +422,12 @@ fn main() {
             .collect::<Vec<(i32, i32, usize)>>();
 
         for car in cars.iter_mut() {
-            if car.update(&mut tentative_positions, &mut cars_passed) {
+            if car.update(
+                &mut tentative_positions,
+                &mut cars_passed,
+                &mut max_time,
+                &mut min_time,
+            ) {
                 near_misses += 1;
             }
         }
@@ -427,9 +445,13 @@ fn main() {
                     keycode: Some(Keycode::Escape),
                     ..
                 } => {
-                    print!("Crashes: 0");
+                    println!("Crashes: 0");
                     println!("Near misses: {}", near_misses);
                     println!("Cars passed: {}", cars_passed);
+                    println!("Slowest speed: {}", SLOW);
+                    println!("Fastest speed: {}", FAST);
+                    println!("Max time: {:.2}s", max_time.as_secs_f64());
+                    println!("Min time: {:.2}s", min_time.as_secs_f64());
                     break 'running;
                 }
                 Event::KeyDown {
