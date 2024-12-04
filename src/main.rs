@@ -15,6 +15,7 @@ const FAST: i32 = 16;
 const DEFAULT: i32 = 8;
 const SLOW: i32 = 4;
 
+// These directions are all from our point of view as we look at the screen. They describe a car's initial direction and it's direction after it's turned, both from our perspective.
 #[derive(Debug, PartialEq, Copy, Clone)]
 enum Airt {
     Up,
@@ -445,13 +446,6 @@ fn main() {
                     keycode: Some(Keycode::Escape),
                     ..
                 } => {
-                    println!("Crashes: 0");
-                    println!("Near misses: {}", near_misses);
-                    println!("Cars passed: {}", cars_passed);
-                    println!("Slowest speed: {}", SLOW);
-                    println!("Fastest speed: {}", FAST);
-                    println!("Max time: {:.2}s", max_time.as_secs_f64());
-                    println!("Min time: {:.2}s", min_time.as_secs_f64());
                     break 'running;
                 }
                 Event::KeyDown {
@@ -481,6 +475,20 @@ fn main() {
             }
         }
     }
+
+    drop(canvas);
+
+    println!("Crashes: 0");
+    println!("Near misses: {}", near_misses);
+    println!("Cars passed: {}", cars_passed);
+    println!("Slowest speed: {}", SLOW);
+    println!("Fastest speed: {}", FAST);
+    println!("Max time: {:.2}s", max_time.as_secs_f64());
+    println!("Min time: {:.2}s", min_time.as_secs_f64());
+    let s = format!(
+                        "Crashes: 0\nNear misses: {}\nCars passed: {}\nSlowest speed: {}\nFastest speed: {}\nMax time: {:.2}s\nMin time: {:.2}s",
+                        near_misses, cars_passed, SLOW, FAST, max_time.as_secs_f64(), min_time.as_secs_f64());
+    show(&s);
 }
 
 fn render(canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, cars: &mut Vec<Car>) {
@@ -619,4 +627,20 @@ fn draw_line(
             draw_dash = false;
         }
     }
+}
+
+use druid::widget::Label;
+use druid::{AppLauncher, Widget, WidgetExt, WindowDesc};
+
+fn show(s: &str) {
+    let main_window = WindowDesc::new(ui_builder(s));
+    let data = ();
+
+    AppLauncher::with_window(main_window)
+        .launch(data)
+        .expect("launch failed");
+}
+
+fn ui_builder(s: &str) -> impl Widget<()> {
+    Label::new(s).center()
 }
