@@ -11,9 +11,9 @@ const HALF_HEIGHT: i32 = WINDOW_HEIGHT / 2;
 
 const LANE_WIDTH: i32 = 16;
 
-const TOP_SPEED: i32 = 8;
-const DEFAULT_SPEED: i32 = 4;
-const SLOW: i32 = 2;
+const TOP_SPEED: i32 = 16;
+const DEFAULT_SPEED: i32 = 8;
+const SLOW: i32 = 4;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 enum Airt {
@@ -190,8 +190,13 @@ impl Car {
         false
     }
 
-    fn update(&mut self, tentative_positions: &mut Vec<(i32, i32, usize)>) -> bool {
-        if self.x < 0 || self.x > 800 || self.y < 0 || self.y > 600 {
+    fn update(
+        &mut self,
+        tentative_positions: &mut Vec<(i32, i32, usize)>,
+        cars_passed: &mut i32,
+    ) -> bool {
+        if self.x < 0 || self.x > WINDOW_WIDTH || self.y < 0 || self.y > WINDOW_HEIGHT {
+            *cars_passed += 1;
             self.gone = true;
             return false;
         }
@@ -203,10 +208,8 @@ impl Car {
             Airt::Up => match self.direction.end {
                 Airt::Left => {
                     if self.y > HALF_HEIGHT - LANE_WIDTH {
-                        // self.speed = rand::thread_rng().gen_range(0..16);
                         new_y = self.y - self.speed;
                     } else {
-                        // self.speed = TOP_SPEED;
                         new_y = HALF_HEIGHT - LANE_WIDTH;
                         self.vertical = false;
                         new_x = self.x - self.speed;
@@ -237,15 +240,12 @@ impl Car {
                     }
                 }
                 Airt::Down => {
-                    // self.speed = rand::thread_rng().gen_range(0..16);
                     new_y = self.y + self.speed;
                 }
                 Airt::Right => {
                     if self.y < HALF_HEIGHT {
-                        // self.speed = rand::thread_rng().gen_range(0..16);
                         new_y = self.y + self.speed;
                     } else {
-                        // self.speed = TOP_SPEED;
                         new_y = HALF_HEIGHT;
                         new_x = self.x + self.speed;
                         self.vertical = false;
@@ -256,10 +256,8 @@ impl Car {
             Airt::Left => match self.direction.end {
                 Airt::Up => {
                     if self.x > HALF_WIDTH + 2 * LANE_WIDTH {
-                        // self.speed = rand::thread_rng().gen_range(0..16);
                         new_x = self.x - self.speed;
                     } else {
-                        // self.speed = TOP_SPEED;
                         new_x = HALF_WIDTH + 2 * LANE_WIDTH;
                         self.vertical = true;
                         new_y = self.y - self.speed;
@@ -270,10 +268,8 @@ impl Car {
                 }
                 Airt::Down => {
                     if self.x > HALF_WIDTH - LANE_WIDTH {
-                        // self.speed = rand::thread_rng().gen_range(0..16);
                         new_x = self.x - self.speed;
                     } else {
-                        // self.speed = TOP_SPEED;
                         new_x = HALF_WIDTH - LANE_WIDTH;
                         self.vertical = true;
                         new_y = self.y + self.speed;
@@ -284,10 +280,8 @@ impl Car {
             Airt::Right => match self.direction.end {
                 Airt::Up => {
                     if self.x < HALF_WIDTH {
-                        // self.speed = rand::thread_rng().gen_range(0..16);
                         new_x = self.x + self.speed;
                     } else {
-                        // self.speed = TOP_SPEED;
                         new_x = HALF_WIDTH;
                         self.vertical = true;
                         new_y = self.y - self.speed;
@@ -311,7 +305,7 @@ impl Car {
         }
 
         if self.will_collide(new_x, new_y, tentative_positions) {
-            return false;
+            return true;
         }
 
         // Update tentative positions
@@ -321,7 +315,7 @@ impl Car {
         self.x = new_x;
         self.y = new_y;
 
-        return true;
+        return false;
     }
 
     fn draw(&mut self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) {
@@ -389,9 +383,11 @@ fn main() {
     let mut event_pump = sdl_context.event_pump().unwrap();
 
     let mut last_keypress_time = Instant::now();
-    let keypress_interval = Duration::from_millis(180);
+    let keypress_interval = Duration::from_millis(64);
 
     let mut cars: Vec<Car> = Vec::new();
+    let mut near_misses = 0;
+    let mut cars_passed = 0;
 
     'running: loop {
         std::thread::sleep(std::time::Duration::from_millis(16));
@@ -413,7 +409,9 @@ fn main() {
             .collect::<Vec<(i32, i32, usize)>>();
 
         for car in cars.iter_mut() {
-            car.update(&mut tentative_positions);
+            if car.update(&mut tentative_positions, &mut cars_passed) {
+                near_misses += 1;
+            }
         }
 
         cars.retain(|car| !car.gone);
@@ -428,7 +426,12 @@ fn main() {
                 | Event::KeyDown {
                     keycode: Some(Keycode::Escape),
                     ..
-                } => break 'running,
+                } => {
+                    print!("Crashes: 0");
+                    println!("Near misses: {}", near_misses);
+                    println!("Cars passed: {}", cars_passed);
+                    break 'running;
+                }
                 Event::KeyDown {
                     keycode: Some(keycode),
                     ..

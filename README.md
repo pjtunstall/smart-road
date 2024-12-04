@@ -12,6 +12,5 @@ Smart Road is the first project of the Rust arc of the 01Edu coding bootcamp. Ne
 
 - Scale to screen size and DPI.
 - Modularize.
-- Collision detection.
-- Collions avoidance.
-- Stats.
+- Stats UI.
+- Properly detect when cars leave the intersection for the stats.
