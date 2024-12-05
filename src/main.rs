@@ -1,4 +1,4 @@
-#![allow(dead_code)]
+#![windows_subsystem = "windows"] // Don't show console in Windows when druid app starts
 use rand::Rng;
 use std::time::{Duration, Instant};
 
@@ -378,7 +378,7 @@ fn main() {
     // let height = (screen_height as f32 * 0.8) as u32;
 
     let window = video_subsystem
-        .window("᛫᛬ᛊᛗᚫᚱᛏᚫᚱᚫᛁᛞᛟ᛬᛫", WINDOW_WIDTH as u32, WINDOW_HEIGHT as u32)
+        .window("Smart Road", WINDOW_WIDTH as u32, WINDOW_HEIGHT as u32)
         .position_centered()
         .build()
         .unwrap();
@@ -638,7 +638,7 @@ fn show(s: &str) {
 
     let main_window = WindowDesc::new(ui_builder(s))
         .window_size((600.0, 400.0))
-        .title("᛫᛬ᛊᛗᚫᚱᛏᚫᚱᚫᛁᛞᛟ᛬᛫")
+        .title("Smart Road")
         .set_position(Point::new(x - 300.0, y - 200.0));
     let data = ();
 
