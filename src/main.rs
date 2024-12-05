@@ -11,9 +11,9 @@ const HALF_HEIGHT: i32 = WINDOW_HEIGHT / 2;
 
 const LANE_WIDTH: i32 = 16;
 
-const FAST: i32 = 16;
-const DEFAULT: i32 = 8;
-const SLOW: i32 = 4;
+const FAST: i32 = 32;
+const DEFAULT: i32 = 16;
+const SLOW: i32 = 8;
 
 // These directions are all from our point of view as we look at the screen. They describe a car's initial direction and it's direction after it's turned, both from our perspective.
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -378,11 +378,7 @@ fn main() {
     // let height = (screen_height as f32 * 0.8) as u32;
 
     let window = video_subsystem
-        .window(
-            "᛫᛬ᚱᚫᛁᛞᛟ᛬ᛊᛗᚫᚱᛏᛟ᛬᛫",
-            WINDOW_WIDTH as u32,
-            WINDOW_HEIGHT as u32,
-        )
+        .window("᛫᛬ᛊᛗᚫᚱᛏᚫᚱᚫᛁᛞᛟ᛬᛫", WINDOW_WIDTH as u32, WINDOW_HEIGHT as u32)
         .position_centered()
         .build()
         .unwrap();
@@ -395,7 +391,7 @@ fn main() {
     let mut event_pump = sdl_context.event_pump().unwrap();
 
     let mut last_keypress_time = Instant::now();
-    let keypress_interval = Duration::from_millis(255);
+    let keypress_interval = Duration::from_millis(128);
 
     let mut cars: Vec<Car> = Vec::new();
     let mut near_misses = 0;
@@ -485,9 +481,13 @@ fn main() {
     println!("Fastest speed: {}", FAST);
     println!("Max time: {:.2}s", max_time.as_secs_f64());
     println!("Min time: {:.2}s", min_time.as_secs_f64());
-    let s = format!(
-                        "Crashes: 0\nNear misses: {}\nCars passed: {}\nSlowest speed: {}\nFastest speed: {}\nMax time: {:.2}s\nMin time: {:.2}s",
-                        near_misses, cars_passed, SLOW, FAST, max_time.as_secs_f64(), min_time.as_secs_f64());
+    let s = if cars_passed == 0 {
+        "Crashes: 0\nNear misses: 0\nCars passed: 0\nSlowest speed: N/A\nFastest speed: N/A\nMax time: N/A\nMin time: N/A".to_string()
+    } else {
+        format!(
+            "Crashes: 0\nNear misses: {}\nCars passed: {}\nSlowest speed: {}\nFastest speed: {}\nMax time: {:.2}s\nMin time: {:.2}s",
+            near_misses, cars_passed, SLOW, FAST, max_time.as_secs_f64(), min_time.as_secs_f64())
+    };
     show(&s);
 }
 
@@ -629,16 +629,22 @@ fn draw_line(
     }
 }
 
-use druid::widget::Label;
-use druid::{AppLauncher, Widget, WidgetExt, WindowDesc};
+use druid::{widget::Label, AppLauncher, Point, Screen, Widget, WidgetExt, WindowDesc};
 
 fn show(s: &str) {
-    let main_window = WindowDesc::new(ui_builder(s));
+    let screen = Screen::get_monitors()[0].virtual_rect();
+    let x = screen.x0 + (screen.x1 - screen.x0) / 2.0;
+    let y = screen.y0 + (screen.y1 - screen.y0) / 2.0;
+
+    let main_window = WindowDesc::new(ui_builder(s))
+        .window_size((600.0, 400.0))
+        .title("᛫᛬ᛊᛗᚫᚱᛏᚫᚱᚫᛁᛞᛟ᛬᛫")
+        .set_position(Point::new(x - 300.0, y - 200.0));
     let data = ();
 
     AppLauncher::with_window(main_window)
         .launch(data)
-        .expect("launch failed");
+        .expect("Launch failed");
 }
 
 fn ui_builder(s: &str) -> impl Widget<()> {
