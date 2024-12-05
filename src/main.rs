@@ -2,6 +2,7 @@
 use rand::Rng;
 use std::time::{Duration, Instant};
 
+use druid::{widget::Label, AppLauncher, Env, Point, Screen, Widget, WidgetExt, WindowDesc};
 use sdl2::{event::Event, keyboard::Keycode, pixels::Color};
 
 const WINDOW_WIDTH: i32 = 800;
@@ -11,9 +12,9 @@ const HALF_HEIGHT: i32 = WINDOW_HEIGHT / 2;
 
 const LANE_WIDTH: i32 = 16;
 
-const FAST: i32 = 32;
-const DEFAULT: i32 = 16;
-const SLOW: i32 = 8;
+const FAST: i32 = 16;
+const DEFAULT: i32 = 8;
+const SLOW: i32 = 4;
 
 // These directions are all from our point of view as we look at the screen. They describe a car's initial direction and it's direction after it's turned, both from our perspective.
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -474,13 +475,6 @@ fn main() {
 
     drop(canvas);
 
-    println!("Crashes: 0");
-    println!("Near misses: {}", near_misses);
-    println!("Cars passed: {}", cars_passed);
-    println!("Slowest speed: {}", SLOW);
-    println!("Fastest speed: {}", FAST);
-    println!("Max time: {:.2}s", max_time.as_secs_f64());
-    println!("Min time: {:.2}s", min_time.as_secs_f64());
     let s = if cars_passed == 0 {
         "Crashes: 0\nNear misses: 0\nCars passed: 0\nSlowest speed: N/A\nFastest speed: N/A\nMax time: N/A\nMin time: N/A".to_string()
     } else {
@@ -629,8 +623,6 @@ fn draw_line(
     }
 }
 
-use druid::{widget::Label, AppLauncher, Point, Screen, Widget, WidgetExt, WindowDesc};
-
 fn show(s: &str) {
     let screen = Screen::get_monitors()[0].virtual_rect();
     let x = screen.x0 + (screen.x1 - screen.x0) / 2.0;
@@ -640,11 +632,39 @@ fn show(s: &str) {
         .window_size((600.0, 400.0))
         .title("Smart Road")
         .set_position(Point::new(x - 300.0, y - 200.0));
-    let data = ();
 
     AppLauncher::with_window(main_window)
-        .launch(data)
+        .delegate(MyAppDelegate)
+        .launch(())
         .expect("Launch failed");
+}
+
+struct MyAppDelegate;
+
+impl druid::AppDelegate<()> for MyAppDelegate {
+    fn event(
+        &mut self,
+        ctx: &mut druid::DelegateCtx,
+        _window_id: druid::WindowId,
+        event: druid::Event,
+        _data: &mut (),
+        _env: &Env,
+    ) -> Option<druid::Event> {
+        match event {
+            druid::Event::WindowCloseRequested => {
+                ctx.submit_command(druid::commands::CLOSE_WINDOW);
+                std::process::exit(0);
+            }
+            druid::Event::KeyDown(ref key_event) => {
+                if key_event.key == druid::keyboard_types::Key::Escape {
+                    ctx.submit_command(druid::commands::CLOSE_WINDOW);
+                    std::process::exit(0);
+                }
+            }
+            _ => {}
+        }
+        Some(event)
+    }
 }
 
 fn ui_builder(s: &str) -> impl Widget<()> {
