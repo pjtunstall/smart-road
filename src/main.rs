@@ -5,17 +5,20 @@ use std::time::{Duration, Instant};
 use druid::{widget::Label, AppLauncher, Env, Point, Screen, Widget, WidgetExt, WindowDesc};
 use sdl2::{event::Event, keyboard::Keycode, pixels::Color};
 
-const WINDOW_WIDTH: i32 = 800;
-const WINDOW_HEIGHT: i32 = 600;
-const HALF_WIDTH: i32 = WINDOW_WIDTH / 2;
-const HALF_HEIGHT: i32 = WINDOW_HEIGHT / 2;
+struct Dimensions {
+    window_width: i32,
+    window_height: i32,
+    half_width: i32,
+    half_height: i32,
+    lane_width: i32,
+    speed: Speed,
+}
 
-const LANE_WIDTH: i32 = 16;
-
-// Speeds: adjust stats readout accordingly if changes are made to these  or the frame rate.
-const FAST: i32 = 16;
-const DEFAULT: i32 = 8;
-const SLOW: i32 = 4;
+struct Speed {
+    fast: i32,
+    default: i32,
+    slow: i32,
+}
 
 // These directions are all from our point of view as we look at the screen. They describe a car's initial direction and its direction after it's turned, both from our perspective.
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -44,12 +47,12 @@ struct Direction {
 }
 
 impl Car {
-    fn spawn(initial_direction: Airt, index: usize) -> Self {
+    fn spawn(initial_direction: Airt, index: usize, dimensions: &Dimensions) -> Self {
         let x;
         let y;
         let final_direction;
         let color;
-        let mut speed = DEFAULT;
+        let mut speed = dimensions.speed.default;
         let vertical;
 
         let r = rand::thread_rng().gen_range(0..3);
@@ -60,21 +63,21 @@ impl Car {
                 color = Color::RGB(255, 0, 0);
                 match r {
                     0 => {
-                        x = HALF_WIDTH;
-                        y = WINDOW_HEIGHT - LANE_WIDTH;
+                        x = dimensions.half_width;
+                        y = dimensions.window_height - dimensions.lane_width;
                         final_direction = Airt::Left;
-                        speed = SLOW;
                     }
                     1 => {
-                        x = HALF_WIDTH + LANE_WIDTH;
-                        y = WINDOW_HEIGHT - LANE_WIDTH;
+                        x = dimensions.half_width + dimensions.lane_width;
+                        y = dimensions.window_height - dimensions.lane_width;
                         final_direction = Airt::Up;
+                        speed = dimensions.speed.fast;
                     }
                     2 => {
-                        x = HALF_WIDTH + 2 * LANE_WIDTH;
-                        y = WINDOW_HEIGHT - LANE_WIDTH;
+                        x = dimensions.half_width + 2 * dimensions.lane_width;
+                        y = dimensions.window_height - dimensions.lane_width;
                         final_direction = Airt::Right;
-                        speed = FAST;
+                        speed = dimensions.speed.slow;
                     }
                     _ => {
                         panic!("Invalid turn");
@@ -87,21 +90,21 @@ impl Car {
                 color = Color::RGB(0, 0, 255);
                 match r {
                     0 => {
-                        x = HALF_WIDTH - 3 * LANE_WIDTH;
+                        x = dimensions.half_width - 3 * dimensions.lane_width;
                         y = 0;
                         final_direction = Airt::Left;
-                        speed = FAST;
+                        speed = dimensions.speed.slow;
                     }
                     1 => {
-                        x = HALF_WIDTH - 2 * LANE_WIDTH;
+                        x = dimensions.half_width - 2 * dimensions.lane_width;
                         y = 0;
                         final_direction = Airt::Down;
+                        speed = dimensions.speed.fast;
                     }
                     _ => {
-                        x = HALF_WIDTH - LANE_WIDTH;
+                        x = dimensions.half_width - dimensions.lane_width;
                         y = 0;
                         final_direction = Airt::Right;
-                        speed = SLOW;
                     }
                 }
             }
@@ -112,20 +115,20 @@ impl Car {
                 match r {
                     0 => {
                         x = 0;
-                        y = HALF_HEIGHT;
+                        y = dimensions.half_height;
                         final_direction = Airt::Up;
-                        speed = SLOW;
                     }
                     1 => {
                         x = 0;
-                        y = HALF_HEIGHT + LANE_WIDTH;
+                        y = dimensions.half_height + dimensions.lane_width;
                         final_direction = Airt::Right;
+                        speed = dimensions.speed.fast;
                     }
                     _ => {
                         x = 0;
-                        y = HALF_HEIGHT + 2 * LANE_WIDTH;
+                        y = dimensions.half_height + 2 * dimensions.lane_width;
                         final_direction = Airt::Down;
-                        speed = FAST;
+                        speed = dimensions.speed.slow;
                     }
                 }
             }
@@ -135,21 +138,21 @@ impl Car {
                 color = Color::RGB(255, 255, 0);
                 match r {
                     0 => {
-                        x = WINDOW_WIDTH - LANE_WIDTH;
-                        y = HALF_HEIGHT - 3 * LANE_WIDTH;
+                        x = dimensions.window_width - dimensions.lane_width;
+                        y = dimensions.half_height - 3 * dimensions.lane_width;
                         final_direction = Airt::Up;
-                        speed = FAST;
                     }
                     1 => {
-                        x = WINDOW_WIDTH - LANE_WIDTH;
-                        y = HALF_HEIGHT - 2 * LANE_WIDTH;
+                        x = dimensions.window_width - dimensions.lane_width;
+                        y = dimensions.half_height - 2 * dimensions.lane_width;
                         final_direction = Airt::Left;
+                        speed = dimensions.speed.fast;
                     }
                     2 => {
-                        x = WINDOW_WIDTH - LANE_WIDTH;
-                        y = HALF_HEIGHT - LANE_WIDTH;
+                        x = dimensions.window_width - dimensions.lane_width;
+                        y = dimensions.half_height - dimensions.lane_width;
                         final_direction = Airt::Down;
-                        speed = SLOW;
+                        speed = dimensions.speed.slow;
                     }
                     _ => {
                         panic!("Invalid turn");
@@ -179,15 +182,16 @@ impl Car {
         new_x: i32,
         new_y: i32,
         tentative_positions: &Vec<(i32, i32, usize)>,
+        dimensions: &Dimensions,
     ) -> bool {
         for other in tentative_positions {
             if other.2 == self.index {
                 continue;
             }
-            if new_x < other.0 + LANE_WIDTH
-                && new_x + LANE_WIDTH > other.0
-                && new_y < other.1 + LANE_WIDTH
-                && new_y + LANE_WIDTH > other.1
+            if new_x < other.0 + dimensions.lane_width
+                && new_x + dimensions.lane_width > other.0
+                && new_y < other.1 + dimensions.lane_width
+                && new_y + dimensions.lane_width > other.1
             {
                 return true;
             }
@@ -201,8 +205,13 @@ impl Car {
         cars_passed: &mut i32,
         max_time: &mut Duration,
         min_time: &mut Duration,
+        dimensions: &Dimensions,
     ) -> bool {
-        if self.x < 0 || self.x > WINDOW_WIDTH || self.y < 0 || self.y > WINDOW_HEIGHT {
+        if self.x < 0
+            || self.x + dimensions.lane_width > dimensions.window_width
+            || self.y < 0
+            || self.y + dimensions.lane_width > dimensions.window_height
+        {
             *cars_passed += 1;
             self.gone = true;
             let elapsed = Instant::now().duration_since(self.birthday);
@@ -221,10 +230,10 @@ impl Car {
         match self.direction.start {
             Airt::Up => match self.direction.end {
                 Airt::Left => {
-                    if self.y > HALF_HEIGHT - LANE_WIDTH {
+                    if self.y > dimensions.half_height - dimensions.lane_width {
                         new_y = self.y - self.speed;
                     } else {
-                        new_y = HALF_HEIGHT - LANE_WIDTH;
+                        new_y = dimensions.half_height - dimensions.lane_width;
                         self.vertical = false;
                         new_x = self.x - self.speed;
                     }
@@ -233,10 +242,10 @@ impl Car {
                     new_y = self.y - self.speed;
                 }
                 Airt::Right => {
-                    if self.y > HALF_HEIGHT + 2 * LANE_WIDTH {
+                    if self.y > dimensions.half_height + 2 * dimensions.lane_width {
                         new_y = self.y - self.speed;
                     } else {
-                        new_y = HALF_HEIGHT + 2 * LANE_WIDTH;
+                        new_y = dimensions.half_height + 2 * dimensions.lane_width;
                         self.vertical = false;
                         new_x = self.x + self.speed;
                     }
@@ -245,10 +254,10 @@ impl Car {
             },
             Airt::Down => match self.direction.end {
                 Airt::Left => {
-                    if self.y < HALF_HEIGHT - 3 * LANE_WIDTH {
+                    if self.y < dimensions.half_height - 3 * dimensions.lane_width {
                         new_y = self.y + self.speed;
                     } else {
-                        new_y = HALF_HEIGHT - 3 * LANE_WIDTH;
+                        new_y = dimensions.half_height - 3 * dimensions.lane_width;
                         new_x = self.x - self.speed;
                         self.vertical = false;
                     }
@@ -257,10 +266,10 @@ impl Car {
                     new_y = self.y + self.speed;
                 }
                 Airt::Right => {
-                    if self.y < HALF_HEIGHT {
+                    if self.y < dimensions.half_height {
                         new_y = self.y + self.speed;
                     } else {
-                        new_y = HALF_HEIGHT;
+                        new_y = dimensions.half_height;
                         new_x = self.x + self.speed;
                         self.vertical = false;
                     }
@@ -269,10 +278,10 @@ impl Car {
             },
             Airt::Left => match self.direction.end {
                 Airt::Up => {
-                    if self.x > HALF_WIDTH + 2 * LANE_WIDTH {
+                    if self.x > dimensions.half_width + 2 * dimensions.lane_width {
                         new_x = self.x - self.speed;
                     } else {
-                        new_x = HALF_WIDTH + 2 * LANE_WIDTH;
+                        new_x = dimensions.half_width + 2 * dimensions.lane_width;
                         self.vertical = true;
                         new_y = self.y - self.speed;
                     }
@@ -281,10 +290,10 @@ impl Car {
                     new_x = self.x - self.speed;
                 }
                 Airt::Down => {
-                    if self.x > HALF_WIDTH - LANE_WIDTH {
+                    if self.x > dimensions.half_width - dimensions.lane_width {
                         new_x = self.x - self.speed;
                     } else {
-                        new_x = HALF_WIDTH - LANE_WIDTH;
+                        new_x = dimensions.half_width - dimensions.lane_width;
                         self.vertical = true;
                         new_y = self.y + self.speed;
                     }
@@ -293,10 +302,10 @@ impl Car {
             },
             Airt::Right => match self.direction.end {
                 Airt::Up => {
-                    if self.x < HALF_WIDTH {
+                    if self.x < dimensions.half_width {
                         new_x = self.x + self.speed;
                     } else {
-                        new_x = HALF_WIDTH;
+                        new_x = dimensions.half_width;
                         self.vertical = true;
                         new_y = self.y - self.speed;
                     }
@@ -305,11 +314,11 @@ impl Car {
                     new_x = self.x + self.speed;
                 }
                 Airt::Down => {
-                    if self.x < HALF_WIDTH - 3 * LANE_WIDTH {
+                    if self.x < dimensions.half_width - 3 * dimensions.lane_width {
                         new_x = self.x + self.speed;
                     } else {
-                        new_x = HALF_WIDTH - 3 * LANE_WIDTH;
-                        self.speed = FAST;
+                        new_x = dimensions.half_width - 3 * dimensions.lane_width;
+                        self.speed = dimensions.speed.fast;
                         self.vertical = true;
                         new_y = self.y + self.speed;
                     }
@@ -318,7 +327,7 @@ impl Car {
             },
         }
 
-        if self.will_collide(new_x, new_y, tentative_positions) {
+        if self.will_collide(new_x, new_y, tentative_positions, dimensions) {
             return true;
         }
 
@@ -332,8 +341,16 @@ impl Car {
         return false;
     }
 
-    fn draw(&mut self, canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) {
-        if self.x < 0 || self.x > WINDOW_WIDTH || self.y < 0 || self.y > WINDOW_HEIGHT {
+    fn draw(
+        &mut self,
+        canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
+        dimensions: &Dimensions,
+    ) {
+        if self.x < 0
+            || self.x + dimensions.lane_width > dimensions.window_width
+            || self.y < 0
+            || self.y + dimensions.lane_width > dimensions.window_height
+        {
             return;
         }
 
@@ -343,15 +360,15 @@ impl Car {
         let height;
 
         if self.vertical {
-            x = self.x + LANE_WIDTH / 4 as i32;
+            x = self.x + dimensions.lane_width / 4 as i32;
             y = self.y as i32 + 1;
-            width = LANE_WIDTH as u32 / 2u32;
-            height = LANE_WIDTH as u32 - 1u32;
+            width = dimensions.lane_width as u32 / 2u32;
+            height = dimensions.lane_width as u32 - 1u32;
         } else {
             x = self.x as i32 + 1;
-            y = self.y + LANE_WIDTH / 4 as i32;
-            width = LANE_WIDTH as u32 - 1u32;
-            height = LANE_WIDTH as u32 / 2u32;
+            y = self.y + dimensions.lane_width / 4 as i32;
+            width = dimensions.lane_width as u32 - 1u32;
+            height = dimensions.lane_width as u32 / 2u32;
         }
 
         canvas.set_draw_color(self.color);
@@ -372,23 +389,47 @@ fn main() {
         ddpi, hdpi, vdpi
     );
 
-    // let display_mode = video_subsystem.current_display_mode(0).unwrap();
-    // let screen_width = display_mode.w;
-    // let screen_height = display_mode.h;
+    let lane_width = (16.0 * ddpi / 134.4) as i32;
 
-    // let width = (screen_width as f32 * 0.8) as u32;
-    // let height = (screen_height as f32 * 0.8) as u32;
+    let speed = Speed {
+        fast: lane_width,
+        default: lane_width / 2 as i32,
+        slow: lane_width / 4 as i32,
+    };
+
+    let display_mode = video_subsystem.current_display_mode(0).unwrap();
+    let screen_width = display_mode.w;
+    let screen_height = display_mode.h;
+
+    let window_width = (screen_width as f32 * 0.6) as i32;
+    let window_height = (screen_height as f32 * 0.8) as i32;
+
+    let dimensions = Dimensions {
+        window_width,
+        window_height,
+        half_width: window_width / 2,
+        half_height: window_height / 2,
+        lane_width: 16,
+        speed,
+    };
 
     let window = video_subsystem
-        .window("Smart Road", WINDOW_WIDTH as u32, WINDOW_HEIGHT as u32)
+        .window(
+            "Smart Road",
+            dimensions.window_width as u32,
+            dimensions.window_height as u32,
+        )
         .position_centered()
         .build()
         .unwrap();
 
     let mut canvas = window.into_canvas().build().unwrap();
-    // canvas
-    //     .set_logical_size(WINDOW_WIDTH, WINDOW_HEIGHT)
-    //     .unwrap();
+    canvas
+        .set_logical_size(
+            dimensions.window_width as u32,
+            dimensions.window_height as u32,
+        )
+        .unwrap();
 
     let mut event_pump = sdl_context.event_pump().unwrap();
 
@@ -420,7 +461,7 @@ fn main() {
             );
         }
 
-        render(&mut canvas, &mut cars);
+        render(&mut canvas, &mut cars, &dimensions);
 
         let mut tentative_positions = cars
             .iter()
@@ -433,6 +474,7 @@ fn main() {
                 &mut cars_passed,
                 &mut max_time,
                 &mut min_time,
+                &dimensions,
             ) {
                 give_ways += 1;
             }
@@ -461,15 +503,21 @@ fn main() {
 
                     if now.duration_since(last_keypress_time) >= keypress_interval {
                         match keycode {
-                            Keycode::Up => cars.push(Car::spawn(Airt::Up, cars.len())),
-                            Keycode::Down => cars.push(Car::spawn(Airt::Down, cars.len())),
-                            Keycode::Left => cars.push(Car::spawn(Airt::Left, cars.len())),
-                            Keycode::Right => cars.push(Car::spawn(Airt::Right, cars.len())),
+                            Keycode::Up => cars.push(Car::spawn(Airt::Up, cars.len(), &dimensions)),
+                            Keycode::Down => {
+                                cars.push(Car::spawn(Airt::Down, cars.len(), &dimensions))
+                            }
+                            Keycode::Left => {
+                                cars.push(Car::spawn(Airt::Left, cars.len(), &dimensions))
+                            }
+                            Keycode::Right => {
+                                cars.push(Car::spawn(Airt::Right, cars.len(), &dimensions))
+                            }
                             Keycode::R => {
                                 let directions = [Airt::Up, Airt::Down, Airt::Left, Airt::Right];
                                 let random_direction =
                                     directions[rand::thread_rng().gen_range(0..directions.len())];
-                                cars.push(Car::spawn(random_direction, cars.len()));
+                                cars.push(Car::spawn(random_direction, cars.len(), &dimensions));
                             }
                             _ => {}
                         }
@@ -488,23 +536,27 @@ fn main() {
     } else {
         let slowest_speed = if give_ways == 0 { 250 } else { 0 };
         format!(
-            "Crashes: 0\nNear misses: 0\nGive ways: {}\nCars passed: {}\nSlowest speed: {}px/s\nFastest speed: 1000px/s\nMax time: {:.2}s\nMin time: {:.2}s",
+            "Crashes: 0\nNear misses: 0\nGive ways: {}\nCars passed: {}\nSlowest speed: {}logical px/s\nFastest speed: 1000 logical px/s\nMax time: {:.2}s\nMin time: {:.2}s",
             give_ways, cars_passed, slowest_speed, max_time.as_secs_f64(), min_time.as_secs_f64())
     };
     show(&s);
 }
 
-fn render(canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, cars: &mut Vec<Car>) {
+fn render(
+    canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
+    cars: &mut Vec<Car>,
+    dimensions: &Dimensions,
+) {
     canvas.set_draw_color(Color::RGB(128, 128, 128));
     canvas.clear();
 
     canvas.set_draw_color(Color::RGB(64, 64, 64));
     canvas
         .fill_rect(sdl2::rect::Rect::new(
-            HALF_WIDTH - 3 * LANE_WIDTH,
+            dimensions.half_width - 3 * dimensions.lane_width,
             0,
-            6 * LANE_WIDTH as u32,
-            WINDOW_HEIGHT as u32,
+            6 * dimensions.lane_width as u32,
+            dimensions.window_height as u32,
         ))
         .unwrap();
 
@@ -512,9 +564,9 @@ fn render(canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, cars: &mut Vec
     canvas
         .fill_rect(sdl2::rect::Rect::new(
             0,
-            HALF_HEIGHT - 3 * LANE_WIDTH,
-            WINDOW_WIDTH as u32,
-            6 * LANE_WIDTH as u32,
+            dimensions.half_height - 3 * dimensions.lane_width,
+            dimensions.window_width as u32,
+            6 * dimensions.lane_width as u32,
         ))
         .unwrap();
 
@@ -522,35 +574,53 @@ fn render(canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, cars: &mut Vec
 
     // Center lines
     canvas
-        .draw_line((HALF_WIDTH, 0), (HALF_WIDTH, WINDOW_HEIGHT))
+        .draw_line(
+            (dimensions.half_width, 0),
+            (dimensions.half_width, dimensions.window_height),
+        )
         .unwrap();
     canvas
-        .draw_line((0, HALF_HEIGHT), (WINDOW_WIDTH, HALF_HEIGHT))
+        .draw_line(
+            (0, dimensions.half_height),
+            (dimensions.window_width, dimensions.half_height),
+        )
         .unwrap();
 
     // Outer lines
     canvas
         .draw_line(
-            (HALF_WIDTH - 3 * LANE_WIDTH, 0),
-            (HALF_WIDTH - 3 * LANE_WIDTH, WINDOW_HEIGHT),
+            (dimensions.half_width - 3 * dimensions.lane_width, 0),
+            (
+                dimensions.half_width - 3 * dimensions.lane_width,
+                dimensions.window_height,
+            ),
         )
         .unwrap();
     canvas
         .draw_line(
-            (0, HALF_HEIGHT - 3 * LANE_WIDTH),
-            (WINDOW_WIDTH, HALF_HEIGHT - 3 * LANE_WIDTH),
+            (0, dimensions.half_height - 3 * dimensions.lane_width),
+            (
+                dimensions.window_width,
+                dimensions.half_height - 3 * dimensions.lane_width,
+            ),
         )
         .unwrap();
     canvas
         .draw_line(
-            (HALF_WIDTH + 3 * LANE_WIDTH, 0),
-            (HALF_WIDTH + 3 * LANE_WIDTH, WINDOW_HEIGHT),
+            (dimensions.half_width + 3 * dimensions.lane_width, 0),
+            (
+                dimensions.half_width + 3 * dimensions.lane_width,
+                dimensions.window_height,
+            ),
         )
         .unwrap();
     canvas
         .draw_line(
-            (0, HALF_HEIGHT + 3 * LANE_WIDTH),
-            (WINDOW_WIDTH, HALF_HEIGHT + 3 * LANE_WIDTH),
+            (0, dimensions.half_height + 3 * dimensions.lane_width),
+            (
+                dimensions.window_width,
+                dimensions.half_height + 3 * dimensions.lane_width,
+            ),
         )
         .unwrap();
 
@@ -558,28 +628,40 @@ fn render(canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, cars: &mut Vec
     for i in 1..3 {
         draw_line(
             canvas,
-            (HALF_WIDTH - LANE_WIDTH * i, 0),
-            (HALF_WIDTH - LANE_WIDTH * i, WINDOW_HEIGHT),
+            (dimensions.half_width - dimensions.lane_width * i, 0),
+            (
+                dimensions.half_width - dimensions.lane_width * i,
+                dimensions.window_height,
+            ),
         );
         draw_line(
             canvas,
-            (HALF_WIDTH + LANE_WIDTH * i, 0),
-            (HALF_WIDTH + LANE_WIDTH * i, WINDOW_HEIGHT),
+            (dimensions.half_width + dimensions.lane_width * i, 0),
+            (
+                dimensions.half_width + dimensions.lane_width * i,
+                dimensions.window_height,
+            ),
         );
         draw_line(
             canvas,
-            (0, HALF_HEIGHT - LANE_WIDTH * i),
-            (WINDOW_WIDTH, HALF_HEIGHT - LANE_WIDTH * i),
+            (0, dimensions.half_height - dimensions.lane_width * i),
+            (
+                dimensions.window_width,
+                dimensions.half_height - dimensions.lane_width * i,
+            ),
         );
         draw_line(
             canvas,
-            (0, HALF_HEIGHT + LANE_WIDTH * i),
-            (WINDOW_WIDTH, HALF_HEIGHT + LANE_WIDTH * i),
+            (0, dimensions.half_height + dimensions.lane_width * i),
+            (
+                dimensions.window_width,
+                dimensions.half_height + dimensions.lane_width * i,
+            ),
         );
     }
 
     for car in cars {
-        car.draw(canvas);
+        car.draw(canvas, &dimensions);
     }
 
     canvas.present();
