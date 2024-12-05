@@ -14,4 +14,4 @@ Arrow keys to spawn cars traveling in a chosen direction, `R` to spawn a car tra
 
 ## Todo
 
-- Refactor: modularize.
+- Refactor
