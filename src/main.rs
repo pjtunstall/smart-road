@@ -343,13 +343,13 @@ impl Car {
 
         if self.vertical {
             x = self.x + LANE_WIDTH / 4 as i32;
-            y = self.y as i32;
+            y = self.y as i32 + 1;
             width = LANE_WIDTH as u32 / 2u32;
-            height = LANE_WIDTH as u32;
+            height = LANE_WIDTH as u32 - 1u32;
         } else {
-            x = self.x as i32;
+            x = self.x as i32 + 1;
             y = self.y + LANE_WIDTH / 4 as i32;
-            width = LANE_WIDTH as u32;
+            width = LANE_WIDTH as u32 - 1u32;
             height = LANE_WIDTH as u32 / 2u32;
         }
 
@@ -395,7 +395,7 @@ fn main() {
     let keypress_interval = Duration::from_millis(128);
 
     let mut cars: Vec<Car> = Vec::new();
-    let mut near_misses = 0;
+    let mut give_ways = 0;
     let mut cars_passed = 0;
     let mut max_time = Duration::from_millis(0);
     let mut min_time = Duration::MAX;
@@ -426,7 +426,7 @@ fn main() {
                 &mut max_time,
                 &mut min_time,
             ) {
-                near_misses += 1;
+                give_ways += 1;
             }
         }
 
@@ -476,11 +476,11 @@ fn main() {
     drop(canvas);
 
     let s = if cars_passed == 0 {
-        "Crashes: 0\nNear misses: 0\nCars passed: 0\nSlowest speed: N/A\nFastest speed: N/A\nMax time: N/A\nMin time: N/A".to_string()
+        "Crashes: 0\nNear misses: 0\nGive ways: 0\nCars passed: 0\nSlowest speed: N/A\nFastest speed: N/A\nMax time: N/A\nMin time: N/A".to_string()
     } else {
         format!(
-            "Crashes: 0\nNear misses: {}\nCars passed: {}\nSlowest speed: {}\nFastest speed: {}\nMax time: {:.2}s\nMin time: {:.2}s",
-            near_misses, cars_passed, SLOW, FAST, max_time.as_secs_f64(), min_time.as_secs_f64())
+            "Crashes: 0\nNear misses: 0\nGive ways: {}\nCars passed: {}\nSlowest speed: {}\nFastest speed: {}\nMax time: {:.2}s\nMin time: {:.2}s",
+            give_ways, cars_passed, SLOW, FAST, max_time.as_secs_f64(), min_time.as_secs_f64())
     };
     show(&s);
 }
@@ -653,11 +653,13 @@ impl druid::AppDelegate<()> for MyAppDelegate {
         match event {
             druid::Event::WindowCloseRequested => {
                 ctx.submit_command(druid::commands::CLOSE_WINDOW);
+                std::thread::sleep(Duration::from_millis(10));
                 std::process::exit(0);
             }
             druid::Event::KeyDown(ref key_event) => {
                 if key_event.key == druid::keyboard_types::Key::Escape {
                     ctx.submit_command(druid::commands::CLOSE_WINDOW);
+                    std::thread::sleep(Duration::from_millis(10));
                     std::process::exit(0);
                 }
             }
