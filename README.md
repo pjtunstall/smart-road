@@ -15,5 +15,4 @@ Arrow keys to spawn cars traveling in a chosen direction, `R` to spawn a car tra
 ## Todo
 
 - Scale sdl2 window to screen size and DPI.
-- Control timestep better than now where it just sleeps for 16ms.
 - Refactor: modularize.
