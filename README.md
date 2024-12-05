@@ -2,7 +2,7 @@
 
 ## Eh?
 
-This is my solution to [smart-road](https://github.com/01-edu/public/tree/master/subjects/smart-road), the first project of the Rust arc of the 01Edu coding bootcamp. It consists of a traffic simulation. The idea is to show cars passing an intersection without colliding.
+This is my solution to [smart-road](https://github.com/01-edu/public/tree/master/subjects/smart-road), the first project of the Rust arc of the 01Edu coding bootcamp. It consists of a traffic simulation. The idea is to show cars passing an intersection without collisions or congestion.
 
 ## Setup
 
@@ -15,4 +15,5 @@ Arrow keys to spawn cars traveling in a chosen direction, `R` to spawn a car tra
 ## Todo
 
 - Scale sdl2 window to screen size and DPI.
+- Control timestep better than now where it just sleeps for 16ms.
 - Refactor: modularize.

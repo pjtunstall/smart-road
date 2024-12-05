@@ -12,11 +12,12 @@ const HALF_HEIGHT: i32 = WINDOW_HEIGHT / 2;
 
 const LANE_WIDTH: i32 = 16;
 
+// Speeds: adjust stats readout accordingly if changes are made to these  or the frame rate.
 const FAST: i32 = 16;
 const DEFAULT: i32 = 8;
 const SLOW: i32 = 4;
 
-// These directions are all from our point of view as we look at the screen. They describe a car's initial direction and it's direction after it's turned, both from our perspective.
+// These directions are all from our point of view as we look at the screen. They describe a car's initial direction and its direction after it's turned, both from our perspective.
 #[derive(Debug, PartialEq, Copy, Clone)]
 enum Airt {
     Up,
@@ -400,8 +401,15 @@ fn main() {
     let mut max_time = Duration::from_millis(0);
     let mut min_time = Duration::MAX;
 
+    let mut start_time = Instant::now();
+
     'running: loop {
-        std::thread::sleep(std::time::Duration::from_millis(16));
+        let now = Instant::now();
+        let elapsed = now.duration_since(start_time);
+        if elapsed < Duration::from_millis(16) {
+            continue;
+        }
+        start_time = now;
 
         for (i, car) in cars.iter().enumerate() {
             assert!(
@@ -478,9 +486,10 @@ fn main() {
     let s = if cars_passed == 0 {
         "Crashes: 0\nNear misses: 0\nGive ways: 0\nCars passed: 0\nSlowest speed: N/A\nFastest speed: N/A\nMax time: N/A\nMin time: N/A".to_string()
     } else {
+        let slowest_speed = if give_ways == 0 { 250 } else { 0 };
         format!(
-            "Crashes: 0\nNear misses: 0\nGive ways: {}\nCars passed: {}\nSlowest speed: {}\nFastest speed: {}\nMax time: {:.2}s\nMin time: {:.2}s",
-            give_ways, cars_passed, SLOW, FAST, max_time.as_secs_f64(), min_time.as_secs_f64())
+            "Crashes: 0\nNear misses: 0\nGive ways: {}\nCars passed: {}\nSlowest speed: {}px/s\nFastest speed: 1000px/s\nMax time: {:.2}s\nMin time: {:.2}s",
+            give_ways, cars_passed, slowest_speed, max_time.as_secs_f64(), min_time.as_secs_f64())
     };
     show(&s);
 }
