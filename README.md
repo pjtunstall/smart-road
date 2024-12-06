@@ -12,4 +12,4 @@ This is my go at [smart-road](https://github.com/01-edu/public/tree/master/subje
 
 - Arrow keys to spawn cars traveling in the chosen direction.
 - `R` to spawn a car traveling in a random direction.
-- `ESC` to closes the window, ending the simulation, and display some stats.
+- `ESC` to close the window, ending the simulation, and display some stats.
