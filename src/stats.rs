@@ -1,6 +1,7 @@
-use std::time::Duration;
-
-use druid::{widget::Label, AppLauncher, Env, Point, Screen, Widget, WidgetExt, WindowDesc};
+use druid::{
+    commands, keyboard_types::Key, widget::Label, AppDelegate, AppLauncher, Command, DelegateCtx,
+    Env, Event, Handled, Point, Screen, Target, Widget, WidgetExt, WindowDesc, WindowId,
+};
 
 pub fn show(s: &str) {
     let screen = Screen::get_monitors()[0].virtual_rect();
@@ -13,33 +14,42 @@ pub fn show(s: &str) {
         .set_position(Point::new(x - 300.0, y - 200.0));
 
     AppLauncher::with_window(main_window)
-        .delegate(MyAppDelegate)
+        .delegate(Delegate)
         .launch(())
         .expect("Launch failed");
 }
 
-struct MyAppDelegate;
+struct Delegate;
 
-impl druid::AppDelegate<()> for MyAppDelegate {
-    fn event(
+impl AppDelegate<()> for Delegate {
+    fn command(
         &mut self,
-        ctx: &mut druid::DelegateCtx,
-        _window_id: druid::WindowId,
-        event: druid::Event,
+        ctx: &mut DelegateCtx,
+        _target: Target,
+        cmd: &Command,
         _data: &mut (),
         _env: &Env,
-    ) -> Option<druid::Event> {
+    ) -> Handled {
+        if cmd.is(commands::CLOSE_WINDOW) {
+            ctx.submit_command(commands::QUIT_APP);
+            true.into()
+        } else {
+            false.into()
+        }
+    }
+
+    fn event(
+        &mut self,
+        ctx: &mut DelegateCtx,
+        _window_id: WindowId,
+        event: Event,
+        _data: &mut (),
+        _env: &Env,
+    ) -> Option<Event> {
         match event {
-            druid::Event::WindowCloseRequested => {
-                ctx.submit_command(druid::commands::CLOSE_WINDOW);
-                std::thread::sleep(Duration::from_millis(10));
-                std::process::exit(0);
-            }
-            druid::Event::KeyDown(ref key_event) => {
-                if key_event.key == druid::keyboard_types::Key::Escape {
-                    ctx.submit_command(druid::commands::CLOSE_WINDOW);
-                    std::thread::sleep(Duration::from_millis(10));
-                    std::process::exit(0);
+            Event::KeyDown(ref key_event) => {
+                if key_event.key == Key::Escape {
+                    ctx.submit_command(commands::QUIT_APP);
                 }
             }
             _ => {}
@@ -49,5 +59,7 @@ impl druid::AppDelegate<()> for MyAppDelegate {
 }
 
 fn ui_builder(s: &str) -> impl Widget<()> {
-    Label::new(s).center()
+    Label::new(s).center().on_click(|ctx, _, _| {
+        ctx.submit_command(commands::CLOSE_WINDOW.to(ctx.window_id()));
+    })
 }

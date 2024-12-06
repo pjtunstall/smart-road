@@ -1,24 +1,23 @@
 #![windows_subsystem = "windows"] // Don't show console in Windows when druid app starts
 
-mod car;
+mod cars;
+mod lanes;
 mod stats;
 
-use std::time::{Duration, Instant};
+use std::{
+    thread,
+    time::{Duration, Instant},
+};
 
 use rand::Rng;
 use sdl2::{event::Event, keyboard::Keycode, pixels::Color};
 
-use car::{Airt, Car, Dimensions, Speed};
+use cars::{Airt, Car, Dimensions, Speed};
 
 fn main() {
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
-    let (ddpi, hdpi, vdpi) = video_subsystem.display_dpi(0).unwrap();
-
-    println!(
-        "Diagonal DPI: {}, Horizontal DPI: {}, Vertical DPI: {}",
-        ddpi, hdpi, vdpi
-    );
+    let (ddpi, _hdpi, _vdpi) = video_subsystem.display_dpi(0).unwrap();
 
     let lane_width = (16.0 * ddpi / 134.4) as i32;
 
@@ -162,6 +161,8 @@ fn main() {
 
     drop(canvas);
 
+    thread::sleep(Duration::from_millis(256));
+
     let s = if cars_passed == 0 {
         "Crashes: 0\nNear misses: 0\nGive ways: 0\nCars passed: 0\nSlowest speed: N/A\nFastest speed: N/A\nMax time: N/A\nMin time: N/A".to_string()
     } else {
@@ -181,166 +182,11 @@ fn render(
     canvas.set_draw_color(Color::RGB(128, 128, 128));
     canvas.clear();
 
-    canvas.set_draw_color(Color::RGB(64, 64, 64));
-    canvas
-        .fill_rect(sdl2::rect::Rect::new(
-            dimensions.half_width - 3 * dimensions.lane_width,
-            0,
-            6 * dimensions.lane_width as u32,
-            dimensions.window_height as u32,
-        ))
-        .unwrap();
-
-    canvas.set_draw_color(Color::RGB(64, 64, 64));
-    canvas
-        .fill_rect(sdl2::rect::Rect::new(
-            0,
-            dimensions.half_height - 3 * dimensions.lane_width,
-            dimensions.window_width as u32,
-            6 * dimensions.lane_width as u32,
-        ))
-        .unwrap();
-
-    canvas.set_draw_color(Color::RGB(255, 255, 255));
-
-    // Center lines
-    canvas
-        .draw_line(
-            (dimensions.half_width, 0),
-            (dimensions.half_width, dimensions.window_height),
-        )
-        .unwrap();
-    canvas
-        .draw_line(
-            (0, dimensions.half_height),
-            (dimensions.window_width, dimensions.half_height),
-        )
-        .unwrap();
-
-    // Outer lines
-    canvas
-        .draw_line(
-            (dimensions.half_width - 3 * dimensions.lane_width, 0),
-            (
-                dimensions.half_width - 3 * dimensions.lane_width,
-                dimensions.window_height,
-            ),
-        )
-        .unwrap();
-    canvas
-        .draw_line(
-            (0, dimensions.half_height - 3 * dimensions.lane_width),
-            (
-                dimensions.window_width,
-                dimensions.half_height - 3 * dimensions.lane_width,
-            ),
-        )
-        .unwrap();
-    canvas
-        .draw_line(
-            (dimensions.half_width + 3 * dimensions.lane_width, 0),
-            (
-                dimensions.half_width + 3 * dimensions.lane_width,
-                dimensions.window_height,
-            ),
-        )
-        .unwrap();
-    canvas
-        .draw_line(
-            (0, dimensions.half_height + 3 * dimensions.lane_width),
-            (
-                dimensions.window_width,
-                dimensions.half_height + 3 * dimensions.lane_width,
-            ),
-        )
-        .unwrap();
-
-    // Draw lane markers
-    for i in 1..3 {
-        draw_line(
-            canvas,
-            (dimensions.half_width - dimensions.lane_width * i, 0),
-            (
-                dimensions.half_width - dimensions.lane_width * i,
-                dimensions.window_height,
-            ),
-        );
-        draw_line(
-            canvas,
-            (dimensions.half_width + dimensions.lane_width * i, 0),
-            (
-                dimensions.half_width + dimensions.lane_width * i,
-                dimensions.window_height,
-            ),
-        );
-        draw_line(
-            canvas,
-            (0, dimensions.half_height - dimensions.lane_width * i),
-            (
-                dimensions.window_width,
-                dimensions.half_height - dimensions.lane_width * i,
-            ),
-        );
-        draw_line(
-            canvas,
-            (0, dimensions.half_height + dimensions.lane_width * i),
-            (
-                dimensions.window_width,
-                dimensions.half_height + dimensions.lane_width * i,
-            ),
-        );
-    }
+    lanes::draw(canvas, &dimensions);
 
     for car in cars {
         car.draw(canvas, &dimensions);
     }
 
     canvas.present();
-}
-
-fn draw_line(
-    canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
-    start: (i32, i32),
-    end: (i32, i32),
-) {
-    let dash_length = 4;
-    let gap_length = 4;
-    let (x1, y1) = start;
-    let (x2, y2) = end;
-    let dx = x2 - x1;
-    let dy = y2 - y1;
-    let steps = (dx.abs().max(dy.abs())) as f32;
-
-    let step_x = dx as f32 / steps;
-    let step_y = dy as f32 / steps;
-
-    let mut current_x = x1 as f32;
-    let mut current_y = y1 as f32;
-
-    let mut draw_dash = true;
-    let mut step_counter = 0.0;
-
-    while step_counter < steps {
-        if draw_dash {
-            let next_x = current_x + step_x;
-            let next_y = current_y + step_y;
-
-            canvas
-                .draw_line(
-                    (current_x as i32, current_y as i32),
-                    (next_x as i32, next_y as i32),
-                )
-                .unwrap();
-        }
-
-        current_x += step_x;
-        current_y += step_y;
-
-        step_counter += 1.0;
-        if step_counter as i32 % (dash_length + gap_length) < dash_length {
-            draw_dash = true;
-        } else {
-            draw_dash = false;
-        }
-    }
 }
