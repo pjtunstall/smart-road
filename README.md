@@ -11,3 +11,7 @@ This is my solution to [smart-road](https://github.com/01-edu/public/tree/master
 ## Usage
 
 Arrow keys to spawn cars traveling in a chosen direction, `R` to spawn a car traveling in a random direction, `ESC` or close the window to end the simulation and see the stats.
+
+## Todo
+
+- Replace i32 with u32 where possible.
