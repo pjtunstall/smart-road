@@ -1,6 +1,6 @@
 use sdl2::pixels::Color;
 
-use crate::cars::Dimensions;
+use crate::types::Dimensions;
 
 pub fn draw(canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, dimensions: &Dimensions) {
     canvas.set_draw_color(Color::RGB(64, 64, 64));
@@ -25,21 +25,15 @@ pub fn draw(canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, dimensions: 
 
     canvas.set_draw_color(Color::RGB(255, 255, 255));
 
-    // Center lines
-    canvas
-        .draw_line(
-            (dimensions.half_width, 0),
-            (dimensions.half_width, dimensions.window_height),
-        )
-        .unwrap();
-    canvas
-        .draw_line(
-            (0, dimensions.half_height),
-            (dimensions.window_width, dimensions.half_height),
-        )
-        .unwrap();
+    draw_center_lines(canvas, dimensions);
+    draw_edge_lines(canvas, dimensions);
+    draw_lane_lines(canvas, dimensions);
+}
 
-    // Outer lines
+fn draw_edge_lines(
+    canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
+    dimensions: &Dimensions,
+) {
     canvas
         .draw_line(
             (dimensions.half_width - 3 * dimensions.lane_width, 0),
@@ -76,51 +70,81 @@ pub fn draw(canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, dimensions: 
             ),
         )
         .unwrap();
+}
 
-    // Draw lane markers
+fn draw_lane_lines(
+    canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
+    dimensions: &Dimensions,
+) {
     for i in 1..3 {
-        draw_line(
+        draw_dashed_line(
             canvas,
             (dimensions.half_width - dimensions.lane_width * i, 0),
             (
                 dimensions.half_width - dimensions.lane_width * i,
                 dimensions.window_height,
             ),
+            4,
+            4,
         );
-        draw_line(
+        draw_dashed_line(
             canvas,
             (dimensions.half_width + dimensions.lane_width * i, 0),
             (
                 dimensions.half_width + dimensions.lane_width * i,
                 dimensions.window_height,
             ),
+            4,
+            4,
         );
-        draw_line(
+        draw_dashed_line(
             canvas,
             (0, dimensions.half_height - dimensions.lane_width * i),
             (
                 dimensions.window_width,
                 dimensions.half_height - dimensions.lane_width * i,
             ),
+            4,
+            4,
         );
-        draw_line(
+        draw_dashed_line(
             canvas,
             (0, dimensions.half_height + dimensions.lane_width * i),
             (
                 dimensions.window_width,
                 dimensions.half_height + dimensions.lane_width * i,
             ),
+            4,
+            4,
         );
     }
 }
 
-fn draw_line(
+fn draw_center_lines(
+    canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
+    dimensions: &Dimensions,
+) {
+    canvas
+        .draw_line(
+            (dimensions.half_width, 0),
+            (dimensions.half_width, dimensions.window_height),
+        )
+        .unwrap();
+    canvas
+        .draw_line(
+            (0, dimensions.half_height),
+            (dimensions.window_width, dimensions.half_height),
+        )
+        .unwrap();
+}
+
+fn draw_dashed_line(
     canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
     start: (i32, i32),
     end: (i32, i32),
+    dash_length: i32,
+    gap_length: i32,
 ) {
-    let dash_length = 4;
-    let gap_length = 4;
     let (x1, y1) = start;
     let (x2, y2) = end;
     let dx = x2 - x1;

@@ -2,39 +2,105 @@ use rand::Rng;
 use sdl2::pixels::Color;
 use std::time::{Duration, Instant};
 
-pub struct Dimensions {
-    pub window_width: i32,
-    pub window_height: i32,
-    pub half_width: i32,
-    pub half_height: i32,
-    pub lane_width: i32,
-    pub speed: Speed,
+use crate::types::{Airt, Dimensions};
+
+pub struct Traffic {
+    pub cars: Vec<Car>,
+    pub cars_passed: i32,
+    pub give_ways: i32,
+    pub max_time: Duration,
+    pub min_time: Duration,
 }
 
-pub struct Speed {
-    pub fast: i32,
-    pub default: i32,
-    pub slow: i32,
-}
+impl Traffic {
+    pub fn new() -> Self {
+        Traffic {
+            cars: Vec::new(),
+            cars_passed: 0,
+            give_ways: 0,
+            max_time: Duration::from_millis(0),
+            min_time: Duration::MAX,
+        }
+    }
 
-// These directions are all from our point of view as we look at the screen. They describe a car's initial direction and its direction after it's turned, both from our perspective.
-#[derive(Debug, PartialEq, Copy, Clone)]
-pub enum Airt {
-    Up,
-    Down,
-    Left,
-    Right,
+    pub fn draw(
+        &self,
+        canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
+        dimensions: &Dimensions,
+    ) {
+        for car in &self.cars {
+            car.draw(canvas, &dimensions);
+        }
+    }
+
+    pub fn format(&self) -> String {
+        if self.cars_passed == 0 {
+            "Crashes: 0\nNear misses: 0\nGive ways: 0\nCars passed: 0\nSlowest speed: N/A\nFastest speed: N/A\nMax time: N/A\nMin time: N/A".to_string()
+        } else {
+            let slowest_speed = if self.give_ways == 0 { 250 } else { 0 };
+            format!(
+                "Crashes: 0\nNear misses: 0\nGive ways: {}\nCars passed: {}\nSlowest speed: {}px/s\nFastest speed: 1000px/s\nMax time: {:.2}s\nMin time: {:.2}s",
+                self.give_ways, self.cars_passed, slowest_speed, self.max_time.as_secs_f64(), self.min_time.as_secs_f64())
+        }
+    }
+
+    pub fn push(&mut self, initial_direction: Airt, dimensions: &Dimensions) {
+        self.cars
+            .push(Car::spawn(initial_direction, self.cars.len(), dimensions));
+    }
+
+    pub fn push_random(&mut self, dimensions: &Dimensions) {
+        let directions = [Airt::Up, Airt::Down, Airt::Left, Airt::Right];
+        let random_direction = directions[rand::thread_rng().gen_range(0..directions.len())];
+        self.cars
+            .push(Car::spawn(random_direction, self.cars.len(), &dimensions));
+    }
+
+    pub fn update(&mut self, dimensions: &Dimensions) {
+        for (i, car) in self.cars.iter().enumerate() {
+            assert!(
+                car.index == i,
+                "Mismatch: car.index {} does not match position {}",
+                car.index,
+                i
+            );
+        }
+
+        let mut tentative_positions = self
+            .cars
+            .iter()
+            .map(|car| (car.x, car.y, car.index))
+            .collect::<Vec<(i32, i32, usize)>>();
+
+        for car in self.cars.iter_mut() {
+            if car.update(
+                &mut tentative_positions,
+                &mut self.cars_passed,
+                &mut self.max_time,
+                &mut self.min_time,
+                &dimensions,
+            ) {
+                self.give_ways += 1;
+            }
+        }
+
+        self.cars.retain(|car| !car.gone);
+
+        for (index, car) in self.cars.iter_mut().enumerate() {
+            car.index = index;
+        }
+    }
 }
 
 pub struct Car {
-    pub x: i32,
-    pub y: i32,
+    x: i32,
+    y: i32,
     color: Color,
     direction: Direction,
     speed: i32,
     vertical: bool,
-    pub gone: bool,
-    pub index: usize,
+    gone: bool,
+    index: usize,
     birthday: Instant,
 }
 
@@ -196,7 +262,7 @@ impl Car {
         false
     }
 
-    pub fn update(
+    fn update(
         &mut self,
         tentative_positions: &mut Vec<(i32, i32, usize)>,
         cars_passed: &mut i32,
@@ -339,7 +405,7 @@ impl Car {
     }
 
     pub fn draw(
-        &mut self,
+        &self,
         canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
         dimensions: &Dimensions,
     ) {
