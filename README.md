@@ -2,7 +2,7 @@
 
 ## Eh?
 
-This is my solution to [smart-road](https://github.com/01-edu/public/tree/master/subjects/smart-road), the first project of the Rust arc of the 01Edu coding bootcamp. It consists of a traffic simulation. The idea is to show cars passing an intersection without collisions or congestion.
+This is my go at [smart-road](https://github.com/01-edu/public/tree/master/subjects/smart-road), the first project of the Rust arc of the 01Edu coding bootcamp. It consists of a traffic simulation. The idea is to show cars passing an intersection without collisions or congestion.
 
 ## types
 
@@ -10,8 +10,6 @@ This is my solution to [smart-road](https://github.com/01-edu/public/tree/master
 
 ## Usage
 
-Arrow keys to spawn cars traveling in a chosen direction, `R` to spawn a car traveling in a random direction, `ESC` or close the window to end the simulation and see the stats.
-
-## Todo
-
-- Replace i32 with u32 where possible.
+- Arrow keys to spawn cars traveling in the chosen direction.
+- `R` to spawn a car traveling in a random direction.
+- `ESC` to closes the window, ending the simulation, and display some stats.
