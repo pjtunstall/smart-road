@@ -10,8 +10,7 @@ use crate::cars::Traffic;
 
 fn main() {
     let mut traffic = Traffic::new();
-    let (sdl_context, mut canvas, dimensions) = sim::setup();
-    sim::run(&sdl_context, &mut canvas, &dimensions, &mut traffic);
+    sim::simulate(&mut traffic);
     let s = traffic.format();
     stats::show(&s);
 }

@@ -11,7 +11,12 @@ use crate::{
     types::{Airt, Dimensions, Speed},
 };
 
-pub fn setup() -> (
+pub fn simulate(traffic: &mut Traffic) {
+    let (sdl_context, mut canvas, dimensions) = setup();
+    run(&sdl_context, &mut canvas, &dimensions, traffic);
+}
+
+fn setup() -> (
     sdl2::Sdl,
     sdl2::render::Canvas<sdl2::video::Window>,
     Dimensions,
@@ -70,7 +75,7 @@ pub fn setup() -> (
     (sdl_context, canvas, dimensions)
 }
 
-pub fn run(
+fn run(
     sdl_context: &Sdl,
     canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
     dimensions: &Dimensions,
