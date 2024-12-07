@@ -73,7 +73,7 @@ impl Traffic {
             .collect::<Vec<(i32, i32, usize)>>();
 
         for car in self.cars.iter_mut() {
-            if car.update(
+            if !car.update(
                 &mut prospective_positions,
                 &mut self.cars_passed,
                 &mut self.max_time,
@@ -284,7 +284,7 @@ impl Car {
             if *min_time > elapsed {
                 *min_time = elapsed;
             }
-            return false;
+            return true;
         }
 
         let mut new_x = self.x;
@@ -381,7 +381,6 @@ impl Car {
                         new_x = self.x + self.speed;
                     } else {
                         new_x = dimensions.half_width - 3 * dimensions.lane_width;
-                        self.speed = dimensions.speed.fast;
                         self.vertical = true;
                         new_y = self.y + self.speed;
                     }
@@ -391,17 +390,17 @@ impl Car {
         }
 
         if self.will_collide(new_x, new_y, prospective_positions, dimensions) {
-            return true;
+            return false;
         }
 
-        // Update tentative positions
+        // Update prospective positions
         prospective_positions[self.index] = (new_x, new_y, self.index);
 
         // Apply final movement
         self.x = new_x;
         self.y = new_y;
 
-        return false;
+        return true;
     }
 
     pub fn draw(
