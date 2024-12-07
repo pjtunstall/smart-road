@@ -1,5 +1,7 @@
 # smart-road
 
+![traffic](images/traffic.jpg)
+
 ## Context
 
 This is my go at [smart-road](https://github.com/01-edu/public/tree/master/subjects/smart-road), the first project of the Rust arc of the [01Edu](https://01-edu.org/) family of coding bootcamps. It consists of a traffic simulation. The idea is to show cars passing an intersection without collisions or congestion.
