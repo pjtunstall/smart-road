@@ -34,7 +34,7 @@ These images were taken before I adjusted the parameters to prevent cars from be
 
 One exercise would be to devise a system to guarantee that cars never have to slow down for each other. Spawns could be timed in such a way that they would always be interleaved, taking into account how long each car needs to reach and pass the potential collision spots.
 
-But that might take the simulation further from reality. Another direction to explore would be to let the cars arrive on screen with random speeds and come up with a proper system to adjust those speeds as need be, based only on local conditions. In that case, a variable stopping distance would be needed, dependant on speed. And then, since we wouldn't be allowing ourselves to fine tune the parameters, we'd definitely need some rule of precedence to avoid gridlock.
+But that might take the simulation further from reality. Another direction to explore would be to let the cars arrive on screen with random speeds and come up with a proper system to adjust those speeds as need be, based only on local conditions. In that case, a variable stopping distance would be needed, dependent on speed. And then, since we wouldn't be allowing ourselves to fine tune the parameters, we'd definitely need some rule of precedence to avoid gridlock.
 
 That would include the obvious rule to let the front car have precedence if cars moving in the sane direction happen to come to close to each other, due to speed changes, triggering their collision detectors to make them stop.
 
