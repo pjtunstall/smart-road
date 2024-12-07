@@ -66,7 +66,7 @@ impl Traffic {
             );
         }
 
-        let mut tentative_positions = self
+        let mut prospective_positions = self
             .cars
             .iter()
             .map(|car| (car.x, car.y, car.index))
@@ -74,7 +74,7 @@ impl Traffic {
 
         for car in self.cars.iter_mut() {
             if car.update(
-                &mut tentative_positions,
+                &mut prospective_positions,
                 &mut self.cars_passed,
                 &mut self.max_time,
                 &mut self.min_time,
@@ -244,10 +244,10 @@ impl Car {
         &self,
         new_x: i32,
         new_y: i32,
-        tentative_positions: &Vec<(i32, i32, usize)>,
+        prospective_positions: &Vec<(i32, i32, usize)>,
         dimensions: &Dimensions,
     ) -> bool {
-        for other in tentative_positions {
+        for other in prospective_positions {
             if other.2 == self.index {
                 continue;
             }
@@ -264,7 +264,7 @@ impl Car {
 
     fn update(
         &mut self,
-        tentative_positions: &mut Vec<(i32, i32, usize)>,
+        prospective_positions: &mut Vec<(i32, i32, usize)>,
         cars_passed: &mut i32,
         max_time: &mut Duration,
         min_time: &mut Duration,
@@ -390,12 +390,12 @@ impl Car {
             },
         }
 
-        if self.will_collide(new_x, new_y, tentative_positions, dimensions) {
+        if self.will_collide(new_x, new_y, prospective_positions, dimensions) {
             return true;
         }
 
         // Update tentative positions
-        tentative_positions[self.index] = (new_x, new_y, self.index);
+        prospective_positions[self.index] = (new_x, new_y, self.index);
 
         // Apply final movement
         self.x = new_x;
