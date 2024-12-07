@@ -13,3 +13,23 @@ This is my go at [smart-road](https://github.com/01-edu/public/tree/master/subje
 - Arrow keys to spawn cars traveling in the chosen direction.
 - `R` to spawn a car traveling in a random direction.
 - `ESC` to close the window, ending the simulation, and display some stats.
+
+## Roadmap
+
+Possible further deveopments include:
+
+### Tests
+
+Unit tests. But, more interestingly, stress tests to try to force gridlocks. Cars could be spawned at the least opportune times in the lanes most likely to cause congestion. The parameters could be adjusted proportionately to speed up the simulation for the test, to give more chance of gridlock.
+
+### Gridlock: two approaches
+
+These images were taken before I adjusted the parameters to prevent cars from being spawned in such rapid succession. Since then, I also swapped the speeds of the lanes so that they travel faster in the left and center lanes, where congestion is a risk.
+
+![stalemate](images/stalemate.jpg)
+
+![gridlock](images/gridlock.jpg)
+
+One exercise would be to devise a system to guarantee that cars never have to slow down for each other. Spawns could be timed in such a way that they would always be interleaved, taking into account how long each car needs to reach and pass the potential collision spots.
+
+But that might take the simulation further from reality. Another direction to explore would be to let the cars arrive on screen with random speeds and come up with a proper system to adjust those speeds as need be, based only on local conditions. In that case, a variable stopping distance would be needed, dependant on speed. And then, since we wouldn't be allowing ourselves to fine tune the parameters, we'd definitely need some rule of precedence to avoid gridlock.
