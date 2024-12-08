@@ -12,13 +12,14 @@ This is my go at [smart-road](https://github.com/01-edu/public/tree/master/subje
 
 ## Usage
 
-- Arrow keys to spawn cars traveling in the chosen direction.
+- Arrow keys to spawn a car traveling in the chosen direction.
 - `R` to spawn a car traveling in a random direction.
 - `ESC` to close the window, ending the simulation, and display some stats.
+- `ESC` again to exit the program.
 
 ## Why two UI libraries?
 
-The instructions suggested we use `sdl2`. I so did for the simulation itself, but used `druid` to show the stats at the end. I had trouble installing the sublibrary `sdl2_ttf`, which `sdl2` uses to display text. It seems many people report issues installing it on MacOS. None of the proposed fixes I tried worked. I wonder if it might be that the latest version of MacOS that's compatible with my old laptop is no longer supported. In any case, I switched to a less finicky option as I wanted this program to be reliably accessible to others.
+The instructions suggested we use `sdl2`. I so did for the simulation itself, but used `druid` to show the stats at the end. I had trouble installing the sublibrary `sdl2_ttf`, which `sdl2` uses to display text. It seems many people report issues installing it on macOS. I wonder if it might be that the latest version of macOS that's compatible with my old laptop is no longer supported. In any case, after trying a few of the proposed fixes without success, I switched to a less finicky option as I wanted this program to be reliably accessible to others.
 
 ## Roadmap
 
