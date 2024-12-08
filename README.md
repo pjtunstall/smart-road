@@ -16,13 +16,17 @@ This is my go at [smart-road](https://github.com/01-edu/public/tree/master/subje
 - `R` to spawn a car traveling in a random direction.
 - `ESC` to close the window, ending the simulation, and display some stats.
 
+## Why two UI libraries?
+
+The instructions suggested we use `sdl2`. I so did for the simulation itself, but used `druid` to show the stats at the end. I had trouble installing the sublibrary `sdl2_ttf`, which `sdl2` uses to display text. It seems many people report issues installing it on MacOS. None of the proposed fixes I tried worked. I wonder if it might be that the latest version of MacOS that's compatible with my old laptop is no longer supported. In any case, I switched to a less finicky option as I wanted this program to be reliably accessible to others.
+
 ## Roadmap
 
 Possible further deveopments include:
 
 ### Tests
 
-Unit tests. But, more interestingly, stress tests to try to force gridlocks. Cars could be spawned at the least opportune times in the lanes most likely to cause congestion. The parameters could be adjusted proportionately to speed up the simulation for the test, to give more chance of gridlock.
+Unit tests. But, more interestingly, stress tests to try to force gridlocks. Cars could be spawned at the least opportune times in the lanes most likely to cause congestion. The parameters could be adjusted to speed up the simulation for the test (and proportionately reduce the `keypress_interval`), to give more chance of gridlock. In that case, the speed would have to be implemented in a way that ensures cars don't jump through each other.
 
 ### Preventing gridlock: two approaches
 
@@ -40,4 +44,4 @@ That would include the obvious rule to let the front car have precedence if cars
 
 The latter system would also make it more challenging to prevent collisions, since we couldn't simply tell a car not to move if that would cause a crash.
 
-It could include more realistic, i.e. less abrupt, turns, different sized vehicles, proper sprites, nicer background ...
+It could include more realistic, i.e. less abrupt, turns, different sized vehicles, proper sprites, nicer background, scenery, lights, ...

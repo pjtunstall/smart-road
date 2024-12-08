@@ -28,6 +28,7 @@ pub fn draw(canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, dimensions: 
     draw_center_lines(canvas, dimensions);
     draw_edge_lines(canvas, dimensions);
     draw_lane_lines(canvas, dimensions);
+    draw_give_way_lines(canvas, dimensions);
 }
 
 fn draw_edge_lines(
@@ -39,37 +40,201 @@ fn draw_edge_lines(
             (dimensions.half_width - 3 * dimensions.lane_width, 0),
             (
                 dimensions.half_width - 3 * dimensions.lane_width,
-                dimensions.window_height,
-            ),
-        )
-        .unwrap();
-    canvas
-        .draw_line(
-            (0, dimensions.half_height - 3 * dimensions.lane_width),
-            (
-                dimensions.window_width,
                 dimensions.half_height - 3 * dimensions.lane_width,
             ),
         )
         .unwrap();
     canvas
         .draw_line(
+            (
+                dimensions.half_width - 3 * dimensions.lane_width,
+                dimensions.half_height + 3 * dimensions.lane_width,
+            ),
+            (
+                dimensions.half_width - 3 * dimensions.lane_width,
+                dimensions.window_height,
+            ),
+        )
+        .unwrap();
+
+    canvas
+        .draw_line(
+            (0, dimensions.half_height - 3 * dimensions.lane_width),
+            (
+                dimensions.half_width - 3 * dimensions.lane_width,
+                dimensions.half_height - 3 * dimensions.lane_width,
+            ),
+        )
+        .unwrap();
+    canvas
+        .draw_line(
+            (
+                dimensions.half_width + 3 * dimensions.lane_width,
+                dimensions.half_height - 3 * dimensions.lane_width,
+            ),
+            (
+                dimensions.window_width,
+                dimensions.half_height - 3 * dimensions.lane_width,
+            ),
+        )
+        .unwrap();
+
+    canvas
+        .draw_line(
             (dimensions.half_width + 3 * dimensions.lane_width, 0),
+            (
+                dimensions.half_width + 3 * dimensions.lane_width,
+                dimensions.half_height - 3 * dimensions.lane_width,
+            ),
+        )
+        .unwrap();
+    canvas
+        .draw_line(
+            (
+                dimensions.half_width + 3 * dimensions.lane_width,
+                dimensions.half_height + 3 * dimensions.lane_width,
+            ),
             (
                 dimensions.half_width + 3 * dimensions.lane_width,
                 dimensions.window_height,
             ),
         )
         .unwrap();
+
     canvas
         .draw_line(
             (0, dimensions.half_height + 3 * dimensions.lane_width),
+            (
+                dimensions.half_width - 3 * dimensions.lane_width,
+                dimensions.half_height + 3 * dimensions.lane_width,
+            ),
+        )
+        .unwrap();
+    canvas
+        .draw_line(
+            (
+                dimensions.half_width + 3 * dimensions.lane_width,
+                dimensions.half_height + 3 * dimensions.lane_width,
+            ),
             (
                 dimensions.window_width,
                 dimensions.half_height + 3 * dimensions.lane_width,
             ),
         )
         .unwrap();
+}
+
+fn draw_give_way_lines(
+    canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
+    dimensions: &Dimensions,
+) {
+    draw_dashed_line(
+        canvas,
+        (
+            dimensions.half_width,
+            dimensions.half_height + 3 * dimensions.lane_width,
+        ),
+        (
+            dimensions.half_width + 3 * dimensions.lane_width,
+            dimensions.half_height + 3 * dimensions.lane_width,
+        ),
+        4,
+        4,
+    );
+    draw_dashed_line(
+        canvas,
+        (
+            dimensions.half_width,
+            dimensions.half_height + 3 * dimensions.lane_width + 8,
+        ),
+        (
+            dimensions.half_width + 3 * dimensions.lane_width,
+            dimensions.half_height + 3 * dimensions.lane_width + 8,
+        ),
+        4,
+        4,
+    );
+
+    draw_dashed_line(
+        canvas,
+        (
+            dimensions.half_width,
+            dimensions.half_height - 3 * dimensions.lane_width,
+        ),
+        (
+            dimensions.half_width - 3 * dimensions.lane_width,
+            dimensions.half_height - 3 * dimensions.lane_width,
+        ),
+        4,
+        4,
+    );
+    draw_dashed_line(
+        canvas,
+        (
+            dimensions.half_width,
+            dimensions.half_height - 3 * dimensions.lane_width - 8,
+        ),
+        (
+            dimensions.half_width - 3 * dimensions.lane_width,
+            dimensions.half_height - 3 * dimensions.lane_width - 8,
+        ),
+        4,
+        4,
+    );
+
+    draw_dashed_line(
+        canvas,
+        (
+            dimensions.half_width + 3 * dimensions.lane_width,
+            dimensions.half_height,
+        ),
+        (
+            dimensions.half_width + 3 * dimensions.lane_width,
+            dimensions.half_height - 3 * dimensions.lane_width,
+        ),
+        4,
+        4,
+    );
+    draw_dashed_line(
+        canvas,
+        (
+            dimensions.half_width + 3 * dimensions.lane_width + 8,
+            dimensions.half_height,
+        ),
+        (
+            dimensions.half_width + 3 * dimensions.lane_width + 8,
+            dimensions.half_height - 3 * dimensions.lane_width,
+        ),
+        4,
+        4,
+    );
+
+    draw_dashed_line(
+        canvas,
+        (
+            dimensions.half_width - 3 * dimensions.lane_width,
+            dimensions.half_height,
+        ),
+        (
+            dimensions.half_width - 3 * dimensions.lane_width,
+            dimensions.half_height + 3 * dimensions.lane_width,
+        ),
+        4,
+        4,
+    );
+    draw_dashed_line(
+        canvas,
+        (
+            dimensions.half_width - 3 * dimensions.lane_width - 8,
+            dimensions.half_height,
+        ),
+        (
+            dimensions.half_width - 3 * dimensions.lane_width - 8,
+            dimensions.half_height + 3 * dimensions.lane_width,
+        ),
+        4,
+        4,
+    );
 }
 
 fn draw_lane_lines(
