@@ -58,7 +58,7 @@ impl Traffic {
 
     pub fn update(&mut self, dimensions: &Dimensions) {
         for (i, car) in self.cars.iter().enumerate() {
-            assert!(
+            debug_assert!(
                 car.index == i,
                 "Mismatch: car.index {} does not match position {}",
                 car.index,
