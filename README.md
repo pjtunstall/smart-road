@@ -27,7 +27,7 @@ Possible further deveopments include:
 
 ### Tests
 
-Unit tests. But, more interestingly, stress tests to try to force gridlocks. Cars could be spawned at the least opportune times in the lanes most likely to cause congestion. The parameters could be adjusted to speed up the simulation for the test (and proportionately reduce the `keypress_interval`), to give more chance of gridlock. In that case, the speed would have to be implemented in a way that ensures cars don't jump through each other.
+Unit tests. But, more interestingly, stress tests to try to force gridlocks. Cars could be spawned at the least opportune times in the lanes most likely to cause congestion. The parameters could be adjusted to speed up the simulation for the test (and proportionately reduce the `keypress_interval`), to give more chance of gridlock. In that case, the speed would have to be implemented in a way that ensures cars don't jump through each other; maybe it could be speeded up by not drawing, just updating the positions.
 
 ### Preventing gridlock: two approaches
 
