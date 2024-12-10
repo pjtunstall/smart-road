@@ -5,8 +5,13 @@ use std::{
 
 use rand::Rng;
 use sdl2::{
-    event::Event, keyboard::Keycode, pixels::Color, rect::Rect, render::TextureCreator,
-    video::WindowContext, Sdl,
+    event::Event,
+    keyboard::Keycode,
+    pixels::Color,
+    rect::Rect,
+    render::{Texture, TextureCreator},
+    video::WindowContext,
+    Sdl,
 };
 
 use crate::{
@@ -17,14 +22,35 @@ use crate::{
 
 pub fn simulate(traffic: &mut Traffic) {
     let (sdl_context, mut canvas, dimensions) = setup();
+
     let texture_creator = canvas.texture_creator();
-    let texture = create_speckled_texture(
+    let background_texture = create_speckled_texture(
         &texture_creator,
         dimensions.window_width as u32,
         dimensions.window_height as u32,
         &mut canvas,
     );
-    run(&sdl_context, &mut canvas, &dimensions, traffic, &texture);
+    let red_car_texture = create_car_texture(&texture_creator, &dimensions, Color::RGB(255, 0, 0));
+    let green_car_texture =
+        create_car_texture(&texture_creator, &dimensions, Color::RGB(0, 255, 0));
+    let blue_car_texture = create_car_texture(&texture_creator, &dimensions, Color::RGB(0, 0, 255));
+    let yellow_car_texture =
+        create_car_texture(&texture_creator, &dimensions, Color::RGB(255, 255, 0));
+    let car_textures = [
+        red_car_texture,
+        green_car_texture,
+        blue_car_texture,
+        yellow_car_texture,
+    ];
+
+    run(
+        &sdl_context,
+        &mut canvas,
+        &dimensions,
+        traffic,
+        &background_texture,
+        &car_textures,
+    );
 }
 
 fn setup() -> (
@@ -91,7 +117,8 @@ fn run(
     canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
     dimensions: &Dimensions,
     traffic: &mut Traffic,
-    texture: &sdl2::render::Texture,
+    background_texture: &sdl2::render::Texture,
+    car_textures: &[sdl2::render::Texture; 4],
 ) {
     let mut event_pump = sdl_context.event_pump().unwrap();
     let mut last_keypress_time = Instant::now();
@@ -107,7 +134,13 @@ fn run(
         start_time = now;
 
         traffic.update(&dimensions);
-        render(canvas, &dimensions, &traffic, &texture);
+        render(
+            canvas,
+            &dimensions,
+            &traffic,
+            &background_texture,
+            car_textures,
+        );
 
         for event in event_pump.poll_iter() {
             match event {
@@ -159,11 +192,12 @@ fn render(
     canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
     dimensions: &Dimensions,
     traffic: &Traffic,
-    texture: &sdl2::render::Texture,
+    background_texture: &sdl2::render::Texture,
+    car_textures: &[sdl2::render::Texture; 4],
 ) {
-    canvas.copy(&texture, None, None).unwrap();
+    canvas.copy(&background_texture, None, None).unwrap();
     lanes::draw(canvas, &dimensions);
-    traffic.draw(canvas, &dimensions);
+    traffic.draw(canvas, &dimensions, car_textures);
     canvas.present();
 }
 
@@ -172,7 +206,7 @@ fn create_speckled_texture<'a>(
     width: u32,
     height: u32,
     canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
-) -> sdl2::render::Texture<'a> {
+) -> Texture<'a> {
     let mut texture = texture_creator
         .create_texture_target(None, width, height)
         .expect("Failed to create texture target");
@@ -197,4 +231,53 @@ fn create_speckled_texture<'a>(
         .expect("Failed to render speckled texture");
 
     texture
+}
+
+fn create_car_texture<'a>(
+    texture_creator: &'a TextureCreator<WindowContext>,
+    dimensions: &Dimensions,
+    body_color: Color,
+) -> sdl2::render::Texture<'a> {
+    let lane_width = dimensions.lane_width as u32;
+
+    // Use RGBA format to support transparency
+    let mut car_surface = sdl2::surface::Surface::new(
+        lane_width,
+        lane_width,
+        sdl2::pixels::PixelFormatEnum::RGBA8888,
+    )
+    .expect("Failed to create car surface");
+
+    // Fill with transparent background (alpha set to 0)
+    car_surface
+        .fill_rect(
+            Rect::new(0, 0, lane_width, lane_width),
+            Color::RGBA(0, 0, 0, 0), // Fully transparent
+        )
+        .unwrap();
+
+    // Draw the car body with red color
+    car_surface
+        .fill_rect(Rect::new(4, 1, lane_width / 2, lane_width - 2), body_color)
+        .unwrap();
+
+    let car_window_width = 6;
+    let car_window_height = 2;
+
+    car_surface
+        .fill_rect(
+            sdl2::rect::Rect::new(5, 6, car_window_width, car_window_height),
+            Color::RGB(0, 0, 0),
+        )
+        .unwrap();
+    car_surface
+        .fill_rect(
+            sdl2::rect::Rect::new(5, 9, car_window_width, car_window_height),
+            Color::RGB(0, 0, 0),
+        )
+        .unwrap();
+
+    texture_creator
+        .create_texture_from_surface(&car_surface)
+        .expect("Failed to create car texture")
 }

@@ -1,5 +1,5 @@
 use rand::Rng;
-use sdl2::pixels::Color;
+use sdl2::{pixels::Color, rect::Rect};
 use std::time::{Duration, Instant};
 
 use crate::types::{Airt, Dimensions};
@@ -27,9 +27,10 @@ impl Traffic {
         &self,
         canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
         dimensions: &Dimensions,
+        car_textures: &[sdl2::render::Texture; 4],
     ) {
         for car in &self.cars {
-            car.draw(canvas, &dimensions);
+            car.draw(canvas, &dimensions, &car_textures);
         }
     }
 
@@ -305,6 +306,7 @@ impl Car {
         &self,
         canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
         dimensions: &Dimensions,
+        car_textures: &[sdl2::render::Texture; 4],
     ) {
         if self.x < 0
             || self.x + dimensions.lane_width > dimensions.window_width
@@ -314,47 +316,88 @@ impl Car {
             return;
         }
 
-        let x;
-        let y;
-        let width;
-        let height;
+        let x = self.x as i32;
+        let y = self.y as i32;
+        let lane_width = dimensions.lane_width as u32;
 
-        if self.vertical {
-            x = self.x + dimensions.lane_width / 4 as i32;
-            y = self.y as i32 + 1;
-            width = dimensions.lane_width as u32 / 2u32;
-            height = dimensions.lane_width as u32 - 1u32;
-        } else {
-            x = self.x as i32 + 1;
-            y = self.y + dimensions.lane_width / 4 as i32;
-            width = dimensions.lane_width as u32 - 1u32;
-            height = dimensions.lane_width as u32 / 2u32;
-        }
+        let angle = if !self.vertical { 90.0 } else { 0.0 };
 
-        canvas.set_draw_color(self.color);
+        let center = sdl2::rect::Point::new(lane_width as i32 / 2, lane_width as i32 / 2);
+
+        let car_texture = match self.direction.start {
+            Airt::Up => &car_textures[0],
+            Airt::Down => &car_textures[1],
+            Airt::Right => &car_textures[2],
+            Airt::Left => &car_textures[3],
+        };
 
         canvas
-            .fill_rect(sdl2::rect::Rect::new(x, y, width, height))
-            .unwrap();
-
-        canvas.set_draw_color(Color::RGB(0, 0, 0));
-        if self.vertical {
-            canvas
-                .fill_rect(sdl2::rect::Rect::new(self.x + 5, self.y + 6, 6, 2))
-                .unwrap();
-            canvas
-                .fill_rect(sdl2::rect::Rect::new(self.x + 5, self.y + 9, 6, 2))
-                .unwrap();
-        } else {
-            canvas.set_draw_color(Color::RGB(0, 0, 0));
-            canvas
-                .fill_rect(sdl2::rect::Rect::new(self.x + 6, self.y + 5, 2, 6))
-                .unwrap();
-            canvas
-                .fill_rect(sdl2::rect::Rect::new(self.x + 9, self.y + 5, 2, 6))
-                .unwrap();
-        }
+            .copy_ex(
+                car_texture,
+                None, // No cropping (draw the whole texture)
+                Some(Rect::new(x, y, lane_width, lane_width)),
+                angle,
+                Some(center),
+                false,
+                false,
+            )
+            .expect("Failed to draw car with rotation");
     }
+
+    // fn draw(
+    //     &self,
+    //     canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
+    //     dimensions: &Dimensions,
+    // ) {
+    //     if self.x < 0
+    //         || self.x + dimensions.lane_width > dimensions.window_width
+    //         || self.y < 0
+    //         || self.y + dimensions.lane_width > dimensions.window_height
+    //     {
+    //         return;
+    //     }
+
+    //     let x;
+    //     let y;
+    //     let width;
+    //     let height;
+
+    //     if self.vertical {
+    //         x = self.x + dimensions.lane_width / 4 as i32;
+    //         y = self.y as i32 + 1;
+    //         width = dimensions.lane_width as u32 / 2u32;
+    //         height = dimensions.lane_width as u32 - 1u32;
+    //     } else {
+    //         x = self.x as i32 + 1;
+    //         y = self.y + dimensions.lane_width / 4 as i32;
+    //         width = dimensions.lane_width as u32 - 1u32;
+    //         height = dimensions.lane_width as u32 / 2u32;
+    //     }
+
+    //     canvas.set_draw_color(self.color);
+
+    //     canvas
+    //         .fill_rect(sdl2::rect::Rect::new(x, y, width, height))
+    //         .unwrap();
+
+    //     canvas.set_draw_color(Color::RGB(0, 0, 0));
+    //     if self.vertical {
+    //         canvas
+    //             .fill_rect(sdl2::rect::Rect::new(self.x + 5, self.y + 6, 6, 2))
+    //             .unwrap();
+    //         canvas
+    //             .fill_rect(sdl2::rect::Rect::new(self.x + 5, self.y + 9, 6, 2))
+    //             .unwrap();
+    //     } else {
+    //         canvas.set_draw_color(Color::RGB(0, 0, 0));
+    //         canvas
+    //             .fill_rect(sdl2::rect::Rect::new(self.x + 6, self.y + 5, 2, 6))
+    //             .unwrap();
+    //         canvas
+    //             .fill_rect(sdl2::rect::Rect::new(self.x + 9, self.y + 5, 2, 6))
+    //             .unwrap();
+    //     }
+    // }
 
     fn calculate_new_position(&mut self, dimensions: &Dimensions) -> (i32, i32) {
         let mut new_x = self.x;
