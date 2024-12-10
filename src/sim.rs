@@ -7,9 +7,9 @@ use rand::Rng;
 use sdl2::{
     event::Event,
     keyboard::Keycode,
-    pixels::Color,
+    pixels::{Color, PixelFormatEnum},
     rect::Rect,
-    render::{Texture, TextureCreator},
+    render::{BlendMode, Texture, TextureCreator},
     video::WindowContext,
     Sdl,
 };
@@ -50,6 +50,7 @@ pub fn simulate(traffic: &mut Traffic) {
         traffic,
         &background_texture,
         &car_textures,
+        &texture_creator,
     );
 }
 
@@ -119,6 +120,7 @@ fn run(
     traffic: &mut Traffic,
     background_texture: &sdl2::render::Texture,
     car_textures: &[sdl2::render::Texture; 4],
+    texture_creator: &TextureCreator<WindowContext>,
 ) {
     let mut event_pump = sdl_context.event_pump().unwrap();
     let mut last_keypress_time = Instant::now();
@@ -134,12 +136,15 @@ fn run(
         start_time = now;
 
         traffic.update(&dimensions);
+        let it = 0;
         render(
             canvas,
             &dimensions,
             &traffic,
             &background_texture,
             car_textures,
+            texture_creator,
+            it,
         );
 
         for event in event_pump.poll_iter() {
@@ -194,43 +199,24 @@ fn render(
     traffic: &Traffic,
     background_texture: &sdl2::render::Texture,
     car_textures: &[sdl2::render::Texture; 4],
+    texture_creator: &TextureCreator<WindowContext>,
+    it: i32,
 ) {
+    canvas.set_draw_color(Color::RGB(240, 240, 240));
+    canvas.clear();
     canvas.copy(&background_texture, None, None).unwrap();
     lanes::draw(canvas, &dimensions);
     traffic.draw(canvas, &dimensions, car_textures);
+    if it % 32768 == 0 {
+        let snow = create_speckled_texture(
+            texture_creator,
+            dimensions.window_width as u32,
+            dimensions.window_height as u32,
+            canvas,
+        );
+        canvas.copy(&snow, None, None).unwrap();
+    }
     canvas.present();
-}
-
-fn create_speckled_texture<'a>(
-    texture_creator: &'a TextureCreator<WindowContext>,
-    width: u32,
-    height: u32,
-    canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
-) -> Texture<'a> {
-    let mut texture = texture_creator
-        .create_texture_target(None, width, height)
-        .expect("Failed to create texture target");
-
-    canvas
-        .with_texture_canvas(&mut texture, |texture_canvas| {
-            texture_canvas.set_draw_color(Color::RGB(128, 128, 128));
-            texture_canvas.clear();
-
-            let mut rng = rand::thread_rng();
-            for _ in 0..50000 {
-                let x = rng.gen_range(0..width as i32);
-                let y = rng.gen_range(0..height as i32);
-                let size = rng.gen_range(1..4);
-                let gray = rng.gen_range(144..255);
-                texture_canvas.set_draw_color(Color::RGB(gray, gray, gray));
-                texture_canvas
-                    .fill_rect(Rect::new(x, y, size, size))
-                    .expect("Failed to fill rect");
-            }
-        })
-        .expect("Failed to render speckled texture");
-
-    texture
 }
 
 fn create_car_texture<'a>(
@@ -287,4 +273,41 @@ fn create_car_texture<'a>(
     texture_creator
         .create_texture_from_surface(&car_surface)
         .expect("Failed to create car texture")
+}
+
+fn create_speckled_texture<'a>(
+    texture_creator: &'a TextureCreator<WindowContext>,
+    width: u32,
+    height: u32,
+    canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
+) -> Texture<'a> {
+    // Create texture with blending enabled.
+    let mut texture = texture_creator
+        .create_texture_target(Some(PixelFormatEnum::RGBA8888), width, height)
+        .expect("Failed to create texture target");
+
+    texture.set_blend_mode(BlendMode::Blend);
+
+    canvas
+        .with_texture_canvas(&mut texture, |texture_canvas| {
+            // Clear with fully transparent color
+            texture_canvas.set_draw_color(Color::RGBA(0, 0, 0, 0));
+            texture_canvas.clear();
+
+            let mut rng = rand::thread_rng();
+            for _ in 0..2048 {
+                let x = rng.gen_range(0..width as i32);
+                let y = rng.gen_range(0..height as i32);
+                let size = rng.gen_range(1..4);
+                let gray = rng.gen_range(128..255);
+
+                texture_canvas.set_draw_color(Color::RGBA(gray, gray, gray, 255));
+                texture_canvas
+                    .fill_rect(Rect::new(x, y, size, size))
+                    .expect("Failed to fill rect");
+            }
+        })
+        .expect("Failed to render speckled texture");
+
+    texture
 }
