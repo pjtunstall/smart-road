@@ -287,6 +287,58 @@ impl Car {
             return true;
         }
 
+        let (new_x, new_y) = self.calculate_new_position(dimensions);
+
+        if self.will_collide(new_x, new_y, prospective_positions, dimensions) {
+            return false;
+        }
+
+        prospective_positions[self.index] = (new_x, new_y, self.index);
+
+        self.x = new_x;
+        self.y = new_y;
+
+        return true;
+    }
+
+    pub fn draw(
+        &self,
+        canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
+        dimensions: &Dimensions,
+    ) {
+        if self.x < 0
+            || self.x + dimensions.lane_width > dimensions.window_width
+            || self.y < 0
+            || self.y + dimensions.lane_width > dimensions.window_height
+        {
+            return;
+        }
+
+        let x;
+        let y;
+        let width;
+        let height;
+
+        if self.vertical {
+            x = self.x + dimensions.lane_width / 4 as i32;
+            y = self.y as i32 + 1;
+            width = dimensions.lane_width as u32 / 2u32;
+            height = dimensions.lane_width as u32 - 1u32;
+        } else {
+            x = self.x as i32 + 1;
+            y = self.y + dimensions.lane_width / 4 as i32;
+            width = dimensions.lane_width as u32 - 1u32;
+            height = dimensions.lane_width as u32 / 2u32;
+        }
+
+        canvas.set_draw_color(self.color);
+
+        canvas
+            .fill_rect(sdl2::rect::Rect::new(x, y, width, height))
+            .unwrap();
+    }
+
+    fn calculate_new_position(&mut self, dimensions: &Dimensions) -> (i32, i32) {
         let mut new_x = self.x;
         let mut new_y = self.y;
 
@@ -389,54 +441,6 @@ impl Car {
             },
         }
 
-        if self.will_collide(new_x, new_y, prospective_positions, dimensions) {
-            return false;
-        }
-
-        // Update prospective positions
-        prospective_positions[self.index] = (new_x, new_y, self.index);
-
-        // Apply final movement
-        self.x = new_x;
-        self.y = new_y;
-
-        return true;
-    }
-
-    pub fn draw(
-        &self,
-        canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
-        dimensions: &Dimensions,
-    ) {
-        if self.x < 0
-            || self.x + dimensions.lane_width > dimensions.window_width
-            || self.y < 0
-            || self.y + dimensions.lane_width > dimensions.window_height
-        {
-            return;
-        }
-
-        let x;
-        let y;
-        let width;
-        let height;
-
-        if self.vertical {
-            x = self.x + dimensions.lane_width / 4 as i32;
-            y = self.y as i32 + 1;
-            width = dimensions.lane_width as u32 / 2u32;
-            height = dimensions.lane_width as u32 - 1u32;
-        } else {
-            x = self.x as i32 + 1;
-            y = self.y + dimensions.lane_width / 4 as i32;
-            width = dimensions.lane_width as u32 - 1u32;
-            height = dimensions.lane_width as u32 / 2u32;
-        }
-
-        canvas.set_draw_color(self.color);
-
-        canvas
-            .fill_rect(sdl2::rect::Rect::new(x, y, width, height))
-            .unwrap();
+        (new_x, new_y)
     }
 }
