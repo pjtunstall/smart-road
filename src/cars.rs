@@ -69,7 +69,7 @@ impl Traffic {
         let mut prospective_positions = self
             .cars
             .iter()
-            .map(|car| (car.x, car.y, car.index))
+            .map(|car| (car.x, car.y, car.index)) // The `index` is used to ignore "collisions" of a car with itself.
             .collect::<Vec<(i32, i32, usize)>>();
 
         for car in self.cars.iter_mut() {
