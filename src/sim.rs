@@ -248,22 +248,21 @@ fn create_car_texture<'a>(
     )
     .expect("Failed to create car surface");
 
-    // Fill with transparent background (alpha set to 0)
     car_surface
         .fill_rect(
             Rect::new(0, 0, lane_width, lane_width),
-            Color::RGBA(0, 0, 0, 0), // Fully transparent
+            Color::RGBA(0, 0, 0, 0),
         )
         .unwrap();
 
-    // Draw the car body with red color
+    // Draw body
     car_surface
         .fill_rect(Rect::new(4, 1, lane_width / 2, lane_width - 2), body_color)
         .unwrap();
 
+    // Draw windows
     let car_window_width = 6;
     let car_window_height = 2;
-
     car_surface
         .fill_rect(
             sdl2::rect::Rect::new(5, 6, car_window_width, car_window_height),
@@ -275,6 +274,14 @@ fn create_car_texture<'a>(
             sdl2::rect::Rect::new(5, 9, car_window_width, car_window_height),
             Color::RGB(0, 0, 0),
         )
+        .unwrap();
+
+    // Draw headlights
+    car_surface
+        .fill_rect(sdl2::rect::Rect::new(5, 1, 2, 1), Color::RGB(255, 255, 255))
+        .unwrap();
+    car_surface
+        .fill_rect(sdl2::rect::Rect::new(8, 1, 2, 1), Color::RGB(255, 255, 255))
         .unwrap();
 
     texture_creator

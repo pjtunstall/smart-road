@@ -320,7 +320,31 @@ impl Car {
         let y = self.y as i32;
         let lane_width = dimensions.lane_width as u32;
 
-        let angle = if !self.vertical { 90.0 } else { 0.0 };
+        let angle = if self.vertical {
+            match self.direction.start {
+                Airt::Up => 0.0,
+                Airt::Down => 180.0,
+                Airt::Left | Airt::Right => {
+                    if self.direction.end == Airt::Up {
+                        0.0
+                    } else {
+                        180.0
+                    }
+                }
+            }
+        } else {
+            match self.direction.start {
+                Airt::Up | Airt::Down => {
+                    if self.direction.end == Airt::Left {
+                        -90.0
+                    } else {
+                        90.0
+                    }
+                }
+                Airt::Left => -90.0,
+                Airt::Right => 90.0,
+            }
+        };
 
         let center = sdl2::rect::Point::new(lane_width as i32 / 2, lane_width as i32 / 2);
 
