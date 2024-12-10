@@ -3,7 +3,11 @@ use std::{
     time::{Duration, Instant},
 };
 
-use sdl2::{event::Event, keyboard::Keycode, pixels::Color, Sdl};
+use rand::Rng;
+use sdl2::{
+    event::Event, keyboard::Keycode, pixels::Color, rect::Rect, render::TextureCreator,
+    video::WindowContext, Sdl,
+};
 
 use crate::{
     cars::Traffic,
@@ -13,7 +17,14 @@ use crate::{
 
 pub fn simulate(traffic: &mut Traffic) {
     let (sdl_context, mut canvas, dimensions) = setup();
-    run(&sdl_context, &mut canvas, &dimensions, traffic);
+    let texture_creator = canvas.texture_creator();
+    let texture = create_speckled_texture(
+        &texture_creator,
+        dimensions.window_width as u32,
+        dimensions.window_height as u32,
+        &mut canvas,
+    );
+    run(&sdl_context, &mut canvas, &dimensions, traffic, &texture);
 }
 
 fn setup() -> (
@@ -64,7 +75,7 @@ fn setup() -> (
         .build()
         .unwrap();
 
-    let mut canvas = window.into_canvas().build().unwrap();
+    let mut canvas = window.into_canvas().present_vsync().build().unwrap();
     canvas
         .set_logical_size(
             dimensions.window_width as u32,
@@ -80,6 +91,7 @@ fn run(
     canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
     dimensions: &Dimensions,
     traffic: &mut Traffic,
+    texture: &sdl2::render::Texture,
 ) {
     let mut event_pump = sdl_context.event_pump().unwrap();
     let mut last_keypress_time = Instant::now();
@@ -95,7 +107,7 @@ fn run(
         start_time = now;
 
         traffic.update(&dimensions);
-        render(canvas, &dimensions, &traffic);
+        render(canvas, &dimensions, &traffic, &texture);
 
         for event in event_pump.poll_iter() {
             match event {
@@ -147,12 +159,46 @@ fn render(
     canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
     dimensions: &Dimensions,
     traffic: &Traffic,
+    texture: &sdl2::render::Texture,
 ) {
-    canvas.set_draw_color(Color::RGB(127, 127, 127));
-    canvas.clear();
-
+    canvas.copy(&texture, None, None).unwrap();
     lanes::draw(canvas, &dimensions);
     traffic.draw(canvas, &dimensions);
-
     canvas.present();
+}
+
+fn create_speckled_texture<'a>(
+    texture_creator: &'a TextureCreator<WindowContext>,
+    width: u32,
+    height: u32,
+    canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
+) -> sdl2::render::Texture<'a> {
+    // Create a texture target
+    let mut texture = texture_creator
+        .create_texture_target(None, width, height)
+        .expect("Failed to create texture target");
+
+    // Render directly to the texture
+    canvas
+        .with_texture_canvas(&mut texture, |texture_canvas| {
+            // Set base color
+            texture_canvas.set_draw_color(Color::RGB(128, 128, 128));
+            texture_canvas.clear();
+
+            let mut rng = rand::thread_rng();
+            for _ in 0..50000 {
+                // Speckle density
+                let x = rng.gen_range(0..width as i32);
+                let y = rng.gen_range(0..height as i32);
+                let size = rng.gen_range(1..4);
+                let gray = rng.gen_range(144..255);
+                texture_canvas.set_draw_color(Color::RGB(gray, gray, gray));
+                texture_canvas
+                    .fill_rect(Rect::new(x, y, size, size))
+                    .expect("Failed to fill rect");
+            }
+        })
+        .expect("Failed to render speckled texture");
+
+    texture
 }
