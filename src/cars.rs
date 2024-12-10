@@ -301,7 +301,7 @@ impl Car {
         return true;
     }
 
-    pub fn draw(
+    fn draw(
         &self,
         canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
         dimensions: &Dimensions,
@@ -336,6 +336,24 @@ impl Car {
         canvas
             .fill_rect(sdl2::rect::Rect::new(x, y, width, height))
             .unwrap();
+
+        canvas.set_draw_color(Color::RGB(0, 0, 0));
+        if self.vertical {
+            canvas
+                .fill_rect(sdl2::rect::Rect::new(self.x + 5, self.y + 6, 6, 2))
+                .unwrap();
+            canvas
+                .fill_rect(sdl2::rect::Rect::new(self.x + 5, self.y + 9, 6, 2))
+                .unwrap();
+        } else {
+            canvas.set_draw_color(Color::RGB(0, 0, 0));
+            canvas
+                .fill_rect(sdl2::rect::Rect::new(self.x + 6, self.y + 5, 2, 6))
+                .unwrap();
+            canvas
+                .fill_rect(sdl2::rect::Rect::new(self.x + 9, self.y + 5, 2, 6))
+                .unwrap();
+        }
     }
 
     fn calculate_new_position(&mut self, dimensions: &Dimensions) -> (i32, i32) {

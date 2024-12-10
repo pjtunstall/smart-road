@@ -48,8 +48,8 @@ fn setup() -> (
 
     let lane_width = (16.0 * inches * ddpi / (1024.3201 * 134.4)) as i32;
     let speed = Speed {
-        fast: lane_width / 2 as i32,
-        default: lane_width * 3 / 8 as i32,
+        fast: lane_width * 3 / 4 as i32,
+        default: lane_width / 2 as i32,
         slow: lane_width / 4 as i32,
     };
 
