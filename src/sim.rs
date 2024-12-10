@@ -295,7 +295,7 @@ fn create_speckled_texture<'a>(
             texture_canvas.clear();
 
             let mut rng = rand::thread_rng();
-            for _ in 0..2048 {
+            for _ in 0..4096 {
                 let x = rng.gen_range(0..width as i32);
                 let y = rng.gen_range(0..height as i32);
                 let size = rng.gen_range(1..4);
