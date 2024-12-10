@@ -324,11 +324,23 @@ impl Car {
 
         let center = sdl2::rect::Point::new(lane_width as i32 / 2, lane_width as i32 / 2);
 
-        let car_texture = match self.direction.start {
-            Airt::Up => &car_textures[0],
-            Airt::Down => &car_textures[1],
-            Airt::Right => &car_textures[2],
-            Airt::Left => &car_textures[3],
+        let car_texture = match self.color {
+            Color {
+                r: 255, g: 0, b: 0, ..
+            } => &car_textures[0],
+            Color {
+                r: 0, g: 0, b: 255, ..
+            } => &car_textures[1],
+            Color {
+                r: 0, g: 255, b: 0, ..
+            } => &car_textures[2],
+            Color {
+                r: 255,
+                g: 255,
+                b: 0,
+                ..
+            } => &car_textures[3],
+            _ => panic!("Unexpected color!"),
         };
 
         canvas
