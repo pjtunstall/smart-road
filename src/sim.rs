@@ -173,21 +173,17 @@ fn create_speckled_texture<'a>(
     height: u32,
     canvas: &mut sdl2::render::Canvas<sdl2::video::Window>,
 ) -> sdl2::render::Texture<'a> {
-    // Create a texture target
     let mut texture = texture_creator
         .create_texture_target(None, width, height)
         .expect("Failed to create texture target");
 
-    // Render directly to the texture
     canvas
         .with_texture_canvas(&mut texture, |texture_canvas| {
-            // Set base color
             texture_canvas.set_draw_color(Color::RGB(128, 128, 128));
             texture_canvas.clear();
 
             let mut rng = rand::thread_rng();
             for _ in 0..50000 {
-                // Speckle density
                 let x = rng.gen_range(0..width as i32);
                 let y = rng.gen_range(0..height as i32);
                 let size = rng.gen_range(1..4);
