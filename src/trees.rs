@@ -4,7 +4,24 @@ use sdl2::{
     video::Window,
 };
 
-fn plant_left_trees(canvas: &mut Canvas<Window>, left_trees_texture: &Texture) {
+pub fn plant(
+    canvas: &mut Canvas<Window>,
+    left_trees_texture: &Texture,
+    right_tree_texture: &Texture,
+    little_tree_texture: &Texture,
+    tree_top_texture: &Texture,
+    tree_data: &[[f64; 2]; 5],
+) {
+    plant_left_trees(canvas, left_trees_texture, tree_data[1]);
+    plant_right_trees(canvas, right_tree_texture, tree_data[2]);
+    plant_little_trees(canvas, little_tree_texture, tree_data[3]);
+    plant_tree_top(canvas, tree_top_texture, tree_data[4]);
+}
+
+fn plant_left_trees(canvas: &mut Canvas<Window>, left_trees_texture: &Texture, data: [f64; 2]) {
+    let width = data[0];
+    let height = data[1];
+
     canvas
         .copy(
             left_trees_texture,
@@ -12,16 +29,16 @@ fn plant_left_trees(canvas: &mut Canvas<Window>, left_trees_texture: &Texture) {
             Some(Rect::new(
                 0,
                 290,
-                (221.0 * 0.7) as u32,
-                (192.0 * 0.7) as u32,
+                (width * 0.7) as u32,
+                (height * 0.7) as u32,
             )),
         )
         .unwrap();
 }
 
-fn plant_right_trees(canvas: &mut Canvas<Window>, right_tree_texture: &Texture) {
-    let width = 178.0;
-    let height = 222.0;
+fn plant_right_trees(canvas: &mut Canvas<Window>, right_tree_texture: &Texture, data: [f64; 2]) {
+    let width = data[0];
+    let height = data[1];
 
     let right_trees = [
         (200, 555, 0.5),
@@ -47,9 +64,9 @@ fn plant_right_trees(canvas: &mut Canvas<Window>, right_tree_texture: &Texture) 
     }
 }
 
-fn plant_little_trees(canvas: &mut Canvas<Window>, little_tree_texture: &Texture) {
-    let width = 85.0;
-    let height = 89.0;
+fn plant_little_trees(canvas: &mut Canvas<Window>, little_tree_texture: &Texture, data: [f64; 2]) {
+    let width = data[0];
+    let height = data[1];
 
     let little_trees = [
         (336, 64, 0.7),
@@ -76,7 +93,10 @@ fn plant_little_trees(canvas: &mut Canvas<Window>, little_tree_texture: &Texture
     }
 }
 
-fn plant_tree_top(canvas: &mut Canvas<Window>, tree_top_texture: &Texture) {
+fn plant_tree_top(canvas: &mut Canvas<Window>, tree_top_texture: &Texture, data: [f64; 2]) {
+    let width = data[0];
+    let height = data[1];
+
     canvas
         .copy(
             tree_top_texture,
@@ -84,22 +104,9 @@ fn plant_tree_top(canvas: &mut Canvas<Window>, tree_top_texture: &Texture) {
             Some(Rect::new(
                 520,
                 214,
-                (178.0 * 0.4) as u32,
-                (222.0 * 0.4) as u32,
+                (width * 0.4) as u32,
+                (height * 0.4) as u32,
             )),
         )
         .unwrap();
-}
-
-pub fn plant(
-    canvas: &mut Canvas<Window>,
-    left_trees_texture: &Texture,
-    right_tree_texture: &Texture,
-    little_tree_texture: &Texture,
-    tree_top_texture: &Texture,
-) {
-    plant_left_trees(canvas, left_trees_texture);
-    plant_right_trees(canvas, right_tree_texture);
-    plant_little_trees(canvas, little_tree_texture);
-    plant_tree_top(canvas, tree_top_texture);
 }

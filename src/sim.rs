@@ -30,6 +30,7 @@ pub fn simulate(traffic: &mut Traffic) {
         background_texture,
         lanes_texture,
         car_textures,
+        tree_data,
     ) = textures::create_textures(&texture_creator, &dimensions, &mut canvas);
 
     run(
@@ -46,6 +47,7 @@ pub fn simulate(traffic: &mut Traffic) {
         &right_tree_texture,
         &little_tree_texture,
         &tree_top_texture,
+        &tree_data,
     );
 }
 
@@ -120,6 +122,7 @@ fn run(
     right_tree_texture: &Texture,
     little_tree_texture: &Texture,
     tree_top_texture: &Texture,
+    tree_data: &[[f64; 2]; 5],
 ) {
     let mut event_pump = sdl_context.event_pump().unwrap();
     let mut last_keypress_time = Instant::now();
@@ -149,6 +152,7 @@ fn run(
             right_tree_texture,
             little_tree_texture,
             tree_top_texture,
+            tree_data,
         );
 
         for event in event_pump.poll_iter() {
@@ -222,6 +226,7 @@ fn render(
     right_tree_texture: &Texture,
     little_tree_texture: &Texture,
     tree_top_texture: &Texture,
+    tree_data: &[[f64; 2]; 5],
 ) {
     canvas.set_draw_color(Color::RGB(240, 240, 240));
     canvas.clear();
@@ -238,6 +243,7 @@ fn render(
         right_tree_texture,
         little_tree_texture,
         tree_top_texture,
+        tree_data,
     );
 
     let snow = textures::create_speckled_texture(

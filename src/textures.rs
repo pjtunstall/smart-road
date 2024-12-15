@@ -23,6 +23,7 @@ pub fn create_textures<'a>(
     Texture<'a>,
     Texture<'a>,
     [Texture<'a>; 4],
+    [[f64; 2]; 5],
 ) {
     let background_texture = create_speckled_texture(
         &texture_creator,
@@ -32,11 +33,25 @@ pub fn create_textures<'a>(
     );
     let lanes_texture = lanes::draw(canvas, &dimensions, &texture_creator);
     let car_textures = create_car_textures(&texture_creator, &dimensions);
-    let trees_texture = create_texture_from_image(&texture_creator, "images/trees.jpg");
-    let left_trees_texture = create_texture_from_image(&texture_creator, "images/left_trees.png");
-    let right_tree_texture = create_texture_from_image(&texture_creator, "images/right_tree.png");
-    let little_tree_texture = create_texture_from_image(&texture_creator, "images/little_tree.png");
-    let tree_top_texture = create_texture_from_image(&texture_creator, "images/tree_top.png");
+
+    let (trees_texture, trees_data) =
+        create_texture_from_image(&texture_creator, "images/trees.jpg");
+    let (left_trees_texture, left_trees_data) =
+        create_texture_from_image(&texture_creator, "images/left_trees.png");
+    let (right_tree_texture, right_tree_data) =
+        create_texture_from_image(&texture_creator, "images/right_tree.png");
+    let (little_tree_texture, little_tree_data) =
+        create_texture_from_image(&texture_creator, "images/little_tree.png");
+    let (tree_top_texture, tree_top_data) =
+        create_texture_from_image(&texture_creator, "images/tree_top.png");
+
+    let tree_data = [
+        trees_data,
+        left_trees_data,
+        right_tree_data,
+        little_tree_data,
+        tree_top_data,
+    ];
 
     (
         trees_texture,
@@ -47,18 +62,17 @@ pub fn create_textures<'a>(
         background_texture,
         lanes_texture,
         car_textures,
+        tree_data,
     )
 }
 
 fn create_texture_from_image<'a>(
     texture_creator: &'a TextureCreator<WindowContext>,
     image_path: &str,
-) -> Texture<'a> {
+) -> (Texture<'a>, [f64; 2]) {
     let img = image::open(image_path).expect("Failed to open image");
     let (width, height) = img.dimensions();
     let mut raw_pixels: Vec<u8> = img.to_rgba8().into_raw();
-
-    println!("{} dimensions: {}x{}", image_path, width, height);
 
     let surface = Surface::from_data(
         &mut raw_pixels,
@@ -73,7 +87,7 @@ fn create_texture_from_image<'a>(
         .create_texture_from_surface(&surface)
         .expect("Failed to create texture");
 
-    texture
+    (texture, [width as f64, height as f64])
 }
 
 pub fn create_speckled_texture<'a>(
