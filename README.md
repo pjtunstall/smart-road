@@ -43,6 +43,10 @@ Another direction to explore would be to let the cars arrive on screen with rand
 
 Also, since we wouldn't be allowing ourselves to fine tune the parameters, we'd need some rule of precedence to prevent gridlock. For the special case of cars traveling in the same lane, of course, we could give the front car priority and work back from there, checking if it's safe for each trailing car to move. This would otherwise be a danger as long as we rely on proximity alone to determine when a car should wait. We could also take into account speed and direction.
 
+### Acceleration
+
 In the interests of realism, we could implement smooth acceleration and braking, and a variable stopping distance, dependent on speed.
+
+#### Other
 
 Finally, the visual aspect could be improved, i.g. with less abrupt turns, proper sprites for the cars, fewer anomalous bits of trees cut off by the road, headlight glow, ...
