@@ -17,13 +17,8 @@ pub fn create_textures<'a>(
 ) -> (
     Texture<'a>,
     Texture<'a>,
-    Texture<'a>,
-    Texture<'a>,
-    Texture<'a>,
-    Texture<'a>,
-    Texture<'a>,
     [Texture<'a>; 4],
-    [[f64; 2]; 5],
+    Vec<(Texture<'a>, [f64; 2])>,
 ) {
     let background_texture = create_speckled_texture(
         &texture_creator,
@@ -34,43 +29,32 @@ pub fn create_textures<'a>(
     let lanes_texture = lanes::draw(canvas, &dimensions, &texture_creator);
     let car_textures = create_car_textures(&texture_creator, &dimensions);
 
-    let (trees_texture, trees_data) =
-        create_texture_from_image(&texture_creator, "images/trees.jpg");
-    let (left_trees_texture, left_trees_data) =
-        create_texture_from_image(&texture_creator, "images/left_trees.png");
-    let (right_tree_texture, right_tree_data) =
-        create_texture_from_image(&texture_creator, "images/right_tree.png");
-    let (little_tree_texture, little_tree_data) =
-        create_texture_from_image(&texture_creator, "images/little_tree.png");
-    let (tree_top_texture, tree_top_data) =
-        create_texture_from_image(&texture_creator, "images/tree_top.png");
-
-    let tree_data = [
-        trees_data,
-        left_trees_data,
-        right_tree_data,
-        little_tree_data,
-        tree_top_data,
+    let paths = [
+        "images/trees.jpg",
+        "images/left_trees.png",
+        "images/right_tree.png",
+        "images/little_tree.png",
+        "images/tree_top.png",
     ];
 
+    let mut tree_textures = Vec::new();
+    for path in paths {
+        tree_textures.push(create_texture_from_image(&texture_creator, path));
+    }
+
     (
-        trees_texture,
-        left_trees_texture,
-        right_tree_texture,
-        little_tree_texture,
-        tree_top_texture,
         background_texture,
         lanes_texture,
         car_textures,
-        tree_data,
+        tree_textures,
     )
 }
 
 fn create_texture_from_image<'a>(
     texture_creator: &'a TextureCreator<WindowContext>,
-    image_path: &str,
+    path: &str,
 ) -> (Texture<'a>, [f64; 2]) {
-    let img = image::open(image_path).expect("Failed to open image");
+    let img = image::open(path).expect("Failed to open image");
     let (width, height) = img.dimensions();
     let mut raw_pixels: Vec<u8> = img.to_rgba8().into_raw();
 

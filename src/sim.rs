@@ -21,17 +21,8 @@ use crate::{
 pub fn simulate(traffic: &mut Traffic) {
     let (sdl_context, mut canvas, mut dimensions) = setup();
     let texture_creator = canvas.texture_creator();
-    let (
-        trees_texture,
-        left_trees_texture,
-        right_tree_texture,
-        little_tree_texture,
-        tree_top_texture,
-        background_texture,
-        lanes_texture,
-        car_textures,
-        tree_data,
-    ) = textures::create_textures(&texture_creator, &dimensions, &mut canvas);
+    let (background_texture, lanes_texture, car_textures, tree_textures) =
+        textures::create_textures(&texture_creator, &dimensions, &mut canvas);
 
     run(
         &sdl_context,
@@ -42,12 +33,7 @@ pub fn simulate(traffic: &mut Traffic) {
         &background_texture,
         &lanes_texture,
         &car_textures,
-        &trees_texture,
-        &left_trees_texture,
-        &right_tree_texture,
-        &little_tree_texture,
-        &tree_top_texture,
-        &tree_data,
+        &tree_textures,
     );
 }
 
@@ -117,12 +103,7 @@ fn run(
     background_texture: &sdl2::render::Texture,
     lanes_texture: &Texture,
     car_textures: &[sdl2::render::Texture; 4],
-    trees_texture: &Texture,
-    left_trees_texture: &Texture,
-    right_tree_texture: &Texture,
-    little_tree_texture: &Texture,
-    tree_top_texture: &Texture,
-    tree_data: &[[f64; 2]; 5],
+    tree_textures: &Vec<(Texture, [f64; 2])>,
 ) {
     let mut event_pump = sdl_context.event_pump().unwrap();
     let mut last_keypress_time = Instant::now();
@@ -147,12 +128,7 @@ fn run(
             car_textures,
             lanes_texture,
             texture_creator,
-            trees_texture,
-            left_trees_texture,
-            right_tree_texture,
-            little_tree_texture,
-            tree_top_texture,
-            tree_data,
+            tree_textures,
         );
 
         for event in event_pump.poll_iter() {
@@ -221,30 +197,18 @@ fn render(
     car_textures: &[sdl2::render::Texture; 4],
     lanes_texture: &Texture,
     texture_creator: &TextureCreator<WindowContext>,
-    trees_texture: &Texture,
-    left_trees_texture: &Texture,
-    right_tree_texture: &Texture,
-    little_tree_texture: &Texture,
-    tree_top_texture: &Texture,
-    tree_data: &[[f64; 2]; 5],
+    tree_textures: &Vec<(Texture, [f64; 2])>,
 ) {
     canvas.set_draw_color(Color::RGB(240, 240, 240));
     canvas.clear();
 
-    canvas.copy(trees_texture, None, None).unwrap();
+    canvas.copy(&tree_textures[0].0, None, None).unwrap();
     canvas.copy(background_texture, None, None).unwrap();
     canvas.copy(lanes_texture, None, None).unwrap();
 
     traffic.draw(canvas, &dimensions, car_textures);
 
-    trees::plant(
-        canvas,
-        left_trees_texture,
-        right_tree_texture,
-        little_tree_texture,
-        tree_top_texture,
-        tree_data,
-    );
+    trees::plant(canvas, tree_textures);
 
     let snow = textures::create_speckled_texture(
         texture_creator,

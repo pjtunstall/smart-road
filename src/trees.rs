@@ -4,18 +4,11 @@ use sdl2::{
     video::Window,
 };
 
-pub fn plant(
-    canvas: &mut Canvas<Window>,
-    left_trees_texture: &Texture,
-    right_tree_texture: &Texture,
-    little_tree_texture: &Texture,
-    tree_top_texture: &Texture,
-    tree_data: &[[f64; 2]; 5],
-) {
-    plant_left_trees(canvas, left_trees_texture, tree_data[1]);
-    plant_right_trees(canvas, right_tree_texture, tree_data[2]);
-    plant_little_trees(canvas, little_tree_texture, tree_data[3]);
-    plant_tree_top(canvas, tree_top_texture, tree_data[4]);
+pub fn plant(canvas: &mut Canvas<Window>, tree_textures: &Vec<(Texture, [f64; 2])>) {
+    plant_left_trees(canvas, &tree_textures[1].0, tree_textures[1].1);
+    plant_right_trees(canvas, &tree_textures[2].0, tree_textures[2].1);
+    plant_little_trees(canvas, &tree_textures[3].0, tree_textures[3].1);
+    plant_tree_top(canvas, &tree_textures[4].0, tree_textures[4].1);
 }
 
 fn plant_left_trees(canvas: &mut Canvas<Window>, left_trees_texture: &Texture, data: [f64; 2]) {
