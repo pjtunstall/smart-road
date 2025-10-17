@@ -4,6 +4,7 @@
 
 - [Context](#context)
 - [Usage](#Usage)
+- [Troubleshooting](#troubleshooting)
 - [Why two UI libraries?](#Why-two-UI-libraries?)
 - [Roadmap](#Roadmap)
   - [Tests](#Tests)
@@ -27,6 +28,10 @@ Alternatively, you can build an executable file with `cargo build`, which will b
 - `R` to spawn a car traveling in a random direction.
 - `ESC` to close the window, ending the simulation, and display some stats.
 - `ESC` again to exit the program.
+
+## Troubleshooting
+
+On Linux, when launched from a VS Code terminal, the program may crash when the simulation window is closed, before it can display the stats. Apparently this issue is due to Snap-packaged VS Code running inside a sandbox that forces its own (older) version of glibc. Try running my smart-road from another terminal, outside of VS Code, or reinstalling VS Code via another package manager.
 
 ## Why two UI libraries?
 
