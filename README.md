@@ -4,7 +4,10 @@
 
 - [Context](#context)
 - [Usage](#Usage)
-- [Troubleshooting](#troubleshooting)
+- [Know issues](#known-issues)
+  - [Snap](#snap)
+  - [Disappearing lane](#disappearing-lanes)
+  - [Wandering trees](#wandering-trees)
 - [Why two UI libraries?](#Why-two-UI-libraries?)
 - [Roadmap](#Roadmap)
   - [Tests](#Tests)
@@ -29,9 +32,30 @@ Alternatively, you can build an executable file with `cargo build`, which will b
 - `ESC` to close the window, ending the simulation, and display some stats.
 - `ESC` again to exit the program.
 
-## Troubleshooting
+## Known issues
 
-On Linux, when launched from a VS Code terminal, the program may crash when the simulation window is closed, before it can display the stats. Apparently this issue is due to Snap-packaged VS Code running inside a sandbox that forces its own (older) version of glibc. Try running my smart-road from another terminal, outside of VS Code, or reinstalling VS Code via another package manager.
+### Snap
+
+On Linux, when launched from a VS Code terminal, the program may crash when the traffic simulation window is closed, before it can display the stats. Apparently this issue is due to Snap-packaged VS Code running inside a sandbox that forces its own (older) version of glibc. Try launching this smart-road from another terminal, outside of VS Code, or reinstalling VS Code via another package manager.
+
+### Disappearing lanes
+
+While writing the program on macOS on my old MacBook Air, this issue was not apparent, but on Ubuntu, on a Lenovo ThinkPad with a larger screen, when the window is resized to be smaller than its initial size, there are certain sizes at which some of the lane markers disappear. As the window is reduced, lanes pop in and out of existence. At each size, a different selection of lanes is visible.
+
+### Wandering trees
+
+The placement of trees seems to be sensitive to screen size. The images in this README show how I placed them when I wrote the program on my old MacBook Air. Running the program now on on Ubuntu, on a Lenovo ThinkPad with a larger screen, some of the trees have wandered out onto the road.
+
+### Windows
+
+Someone reported the following error when trying to compile on Windows, which I haven't experimeted with yet:
+
+```sh
+imon\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib\rustlib\etc\libstd.natvis"
+  = note: LINK : fatal error LNK1181: cannot open input file 'SDL2.lib'
+```
+
+For what it's worth, [here](https://www.reddit.com/r/rust/comments/1i48mui/link_fatal_error_lnk1181_cannot_open_input_file/?rdt=43179) is a Redit discussion that mentions a fix for this error. Again, it concerns sdl2.
 
 ## Why two UI libraries?
 
