@@ -42,10 +42,6 @@ On Linux, when launched from a VS Code terminal, the program may crash when the 
 
 While writing the program on macOS on my old MacBook Air, this issue was not apparent, but on Ubuntu, on a Lenovo ThinkPad with a larger screen, when the window is resized to be smaller than its initial size, there are certain sizes at which some of the lane markers disappear. As the window is reduced, lanes pop in and out of existence. At each size, a different selection of lanes is visible.
 
-### Wandering trees
-
-The placement of trees seems to be sensitive to screen size. The images in this README show how I placed them when I wrote the program on my old MacBook Air. Running the program now on on Ubuntu, on a Lenovo ThinkPad with a larger screen, some of the trees have wandered out onto the road.
-
 ### Windows
 
 Someone reported the following error when trying to compile on Windows, which I haven't experimeted with yet:

@@ -130,7 +130,11 @@ fn create_car_texture<'a>(
 ) -> sdl2::render::Texture<'a> {
     let lane_width = dimensions.lane_width as u32;
 
-    // Use RGBA format to support transparency
+    let scale = lane_width as f32 / 16.0;
+
+    let s = |val: u32| (val as f32 * scale).round() as u32;
+    let si = |val: i32| (val as f32 * scale).round() as i32;
+
     let mut car_surface = sdl2::surface::Surface::new(
         lane_width,
         lane_width,
@@ -145,33 +149,31 @@ fn create_car_texture<'a>(
         )
         .unwrap();
 
-    // Draw body
+    // Draw body.
     car_surface
-        .fill_rect(Rect::new(4, 1, lane_width / 2, lane_width - 2), body_color)
+        .fill_rect(Rect::new(si(4), si(1), s(8), s(14)), body_color)
         .unwrap();
 
-    // Draw windows
-    let car_window_width = 6;
-    let car_window_height = 2;
+    // Draw windows.
+    car_surface
+        .fill_rect(Rect::new(si(5), si(6), s(6), s(2)), Color::RGB(0, 0, 0))
+        .unwrap();
+    car_surface
+        .fill_rect(Rect::new(si(5), si(9), s(6), s(2)), Color::RGB(0, 0, 0))
+        .unwrap();
+
+    // Draw headlights.
     car_surface
         .fill_rect(
-            sdl2::rect::Rect::new(5, 6, car_window_width, car_window_height),
-            Color::RGB(0, 0, 0),
+            Rect::new(si(5), si(1), s(2).max(1), s(1).max(1)),
+            Color::RGB(255, 255, 255),
         )
         .unwrap();
     car_surface
         .fill_rect(
-            sdl2::rect::Rect::new(5, 9, car_window_width, car_window_height),
-            Color::RGB(0, 0, 0),
+            Rect::new(si(9), si(1), s(2).max(1), s(1).max(1)),
+            Color::RGB(255, 255, 255),
         )
-        .unwrap();
-
-    // Draw headlights
-    car_surface
-        .fill_rect(sdl2::rect::Rect::new(5, 1, 2, 1), Color::RGB(255, 255, 255))
-        .unwrap();
-    car_surface
-        .fill_rect(sdl2::rect::Rect::new(8, 1, 2, 1), Color::RGB(255, 255, 255))
         .unwrap();
 
     texture_creator

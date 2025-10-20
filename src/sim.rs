@@ -38,6 +38,7 @@ pub fn simulate(traffic: &mut Traffic) {
 }
 
 fn setup() -> (sdl2::Sdl, Canvas<Window>, Dimensions) {
+    sdl2::hint::set("SDL_NO_SIGNAL_HANDLERS", "1");
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
 
@@ -68,7 +69,7 @@ fn setup() -> (sdl2::Sdl, Canvas<Window>, Dimensions) {
         window_height,
         half_width: window_width / 2,
         half_height: window_height / 2,
-        lane_width: 16,
+        lane_width,
         speed,
     };
 
@@ -208,7 +209,7 @@ fn render(
 
     traffic.draw(canvas, &dimensions, car_textures);
 
-    trees::plant(canvas, tree_textures);
+    trees::plant(canvas, tree_textures, dimensions);
 
     let snow = textures::create_speckled_texture(
         texture_creator,

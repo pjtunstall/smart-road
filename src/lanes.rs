@@ -1,9 +1,7 @@
-use sdl2::render::Canvas;
-use sdl2::video::Window;
 use sdl2::{
     pixels::{Color, PixelFormatEnum},
-    render::{BlendMode, Texture, TextureCreator},
-    video::WindowContext,
+    render::{BlendMode, Canvas, Texture, TextureCreator},
+    video::{Window, WindowContext},
 };
 
 use crate::types::Dimensions;
@@ -146,6 +144,11 @@ fn draw_edge_lines_to_texture(texture_canvas: &mut Canvas<Window>, dimensions: &
 }
 
 fn draw_give_way_lines_to_texture(texture_canvas: &mut Canvas<Window>, dimensions: &Dimensions) {
+    // Scale dash/gap lengths with lane_width
+    let dash_len = dimensions.lane_width / 4;
+    let gap_len = dimensions.lane_width / 4;
+    let offset = dimensions.lane_width / 2;
+
     draw_dashed_line_to_texture(
         texture_canvas,
         (
@@ -156,21 +159,21 @@ fn draw_give_way_lines_to_texture(texture_canvas: &mut Canvas<Window>, dimension
             dimensions.half_width + 3 * dimensions.lane_width,
             dimensions.half_height + 3 * dimensions.lane_width,
         ),
-        4,
-        4,
+        dash_len,
+        gap_len,
     );
     draw_dashed_line_to_texture(
         texture_canvas,
         (
             dimensions.half_width,
-            dimensions.half_height + 3 * dimensions.lane_width + 8,
+            dimensions.half_height + 3 * dimensions.lane_width + offset,
         ),
         (
             dimensions.half_width + 3 * dimensions.lane_width,
-            dimensions.half_height + 3 * dimensions.lane_width + 8,
+            dimensions.half_height + 3 * dimensions.lane_width + offset,
         ),
-        4,
-        4,
+        dash_len,
+        gap_len,
     );
 
     draw_dashed_line_to_texture(
@@ -183,21 +186,21 @@ fn draw_give_way_lines_to_texture(texture_canvas: &mut Canvas<Window>, dimension
             dimensions.half_width - 3 * dimensions.lane_width,
             dimensions.half_height - 3 * dimensions.lane_width,
         ),
-        4,
-        4,
+        dash_len,
+        gap_len,
     );
     draw_dashed_line_to_texture(
         texture_canvas,
         (
             dimensions.half_width,
-            dimensions.half_height - 3 * dimensions.lane_width - 8,
+            dimensions.half_height - 3 * dimensions.lane_width - offset,
         ),
         (
             dimensions.half_width - 3 * dimensions.lane_width,
-            dimensions.half_height - 3 * dimensions.lane_width - 8,
+            dimensions.half_height - 3 * dimensions.lane_width - offset,
         ),
-        4,
-        4,
+        dash_len,
+        gap_len,
     );
 
     draw_dashed_line_to_texture(
@@ -210,21 +213,21 @@ fn draw_give_way_lines_to_texture(texture_canvas: &mut Canvas<Window>, dimension
             dimensions.half_width + 3 * dimensions.lane_width,
             dimensions.half_height - 3 * dimensions.lane_width,
         ),
-        4,
-        4,
+        dash_len,
+        gap_len,
     );
     draw_dashed_line_to_texture(
         texture_canvas,
         (
-            dimensions.half_width + 3 * dimensions.lane_width + 8,
+            dimensions.half_width + 3 * dimensions.lane_width + offset,
             dimensions.half_height,
         ),
         (
-            dimensions.half_width + 3 * dimensions.lane_width + 8,
+            dimensions.half_width + 3 * dimensions.lane_width + offset,
             dimensions.half_height - 3 * dimensions.lane_width,
         ),
-        4,
-        4,
+        dash_len,
+        gap_len,
     );
 
     draw_dashed_line_to_texture(
@@ -237,21 +240,21 @@ fn draw_give_way_lines_to_texture(texture_canvas: &mut Canvas<Window>, dimension
             dimensions.half_width - 3 * dimensions.lane_width,
             dimensions.half_height + 3 * dimensions.lane_width,
         ),
-        4,
-        4,
+        dash_len,
+        gap_len,
     );
     draw_dashed_line_to_texture(
         texture_canvas,
         (
-            dimensions.half_width - 3 * dimensions.lane_width - 8,
+            dimensions.half_width - 3 * dimensions.lane_width - offset,
             dimensions.half_height,
         ),
         (
-            dimensions.half_width - 3 * dimensions.lane_width - 8,
+            dimensions.half_width - 3 * dimensions.lane_width - offset,
             dimensions.half_height + 3 * dimensions.lane_width,
         ),
-        4,
-        4,
+        dash_len,
+        gap_len,
     );
 }
 
@@ -259,6 +262,9 @@ fn draw_lane_lines_to_texture(
     texture_canvas: &mut sdl2::render::Canvas<Window>,
     dimensions: &Dimensions,
 ) {
+    let dash_len = dimensions.lane_width / 4;
+    let gap_len = dimensions.lane_width / 4;
+
     for i in 1..3 {
         draw_dashed_line_to_texture(
             texture_canvas,
@@ -267,8 +273,8 @@ fn draw_lane_lines_to_texture(
                 dimensions.half_width - dimensions.lane_width * i,
                 dimensions.window_height,
             ),
-            4,
-            4,
+            dash_len,
+            gap_len,
         );
         draw_dashed_line_to_texture(
             texture_canvas,
@@ -277,8 +283,8 @@ fn draw_lane_lines_to_texture(
                 dimensions.half_width + dimensions.lane_width * i,
                 dimensions.window_height,
             ),
-            4,
-            4,
+            dash_len,
+            gap_len,
         );
         draw_dashed_line_to_texture(
             texture_canvas,
@@ -287,8 +293,8 @@ fn draw_lane_lines_to_texture(
                 dimensions.window_width,
                 dimensions.half_height - dimensions.lane_width * i,
             ),
-            4,
-            4,
+            dash_len,
+            gap_len,
         );
         draw_dashed_line_to_texture(
             texture_canvas,
@@ -297,8 +303,8 @@ fn draw_lane_lines_to_texture(
                 dimensions.window_width,
                 dimensions.half_height + dimensions.lane_width * i,
             ),
-            4,
-            4,
+            dash_len,
+            gap_len,
         );
     }
 }
