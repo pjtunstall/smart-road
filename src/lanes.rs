@@ -144,8 +144,8 @@ fn draw_edge_lines_to_texture(texture_canvas: &mut Canvas<Window>, dimensions: &
 }
 
 fn draw_give_way_lines_to_texture(texture_canvas: &mut Canvas<Window>, dimensions: &Dimensions) {
-    let dash_len = (dimensions.lane_width as f32 * 0.25).round() as i32;
-    let gap_len = dash_len;
+    let dash_len = dimensions.lane_width / 4;
+    let gap_len = dimensions.lane_width / 4;
     let offset = dimensions.lane_width / 2;
 
     draw_dashed_line_to_texture(
