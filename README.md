@@ -63,15 +63,13 @@ Unit tests. But, more interestingly, stress tests to try to force gridlocks. Car
 
 ### Preventing gridlock: two approaches
 
-These images were taken before I adjusted the parameters, the three speeds and `keypress_interval`, to prevent cars from being spawned in such rapid succession. Since then, I also swapped the speeds of the lanes so that they travel faster in the left and center lanes, where congestion is a risk. One way to see gridlock now is to change `keypress_interval` from 128 to 32.
+These images were taken before I adjusted the parameters, the three speeds and `keypress_interval`, to prevent cars from being spawned in such rapid succession. Since then, I also swapped the speeds of the lanes so that they travel faster in the left and center lanes, where congestion is a risk. One way to see gridlock now is to reduce the `keypress_interval`, initialized in `sim.rs`.
 
 ![gridlock](images/gridlock.jpg)
 
 One exercise would be to devise a system to guarantee that cars never have to slow down for each other. Spawns could be timed in such a way that they would always be interleaved, taking into account how long each car needs to reach and pass the potential collision spots. But that might take the simulation further from reality.
 
 Another direction to explore would be to let the cars arrive on screen with random speeds and come up with a proper system to adjust those speeds as need be, based only on local conditions. This would make it more challenging to prevent collisions, since we couldn't simply tell a car not to move if that would cause a crash.
-
-Also, since we wouldn't be allowing ourselves to fine tune the parameters, we'd need some rule of precedence to prevent gridlock. For the special case of cars traveling in the same lane, of course, we could give the front car priority and work back from there, checking if it's safe for each trailing car to move. This would otherwise be a danger as long as we rely on proximity alone to determine when a car should wait. We could also take into account speed and direction.
 
 ### Acceleration
 
