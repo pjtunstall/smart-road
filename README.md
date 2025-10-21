@@ -38,10 +38,6 @@ Alternatively, you can build an executable file with `cargo build`, which will b
 
 On Linux, when launched from a VS Code terminal, the program may crash when the traffic simulation window is closed, before it can display the stats. Apparently this issue is due to Snap-packaged VS Code running inside a sandbox that forces its own (older) version of glibc. Try launching this smart-road from another terminal, outside of VS Code, or reinstalling VS Code via another package manager.
 
-### Disappearing lanes
-
-While writing the program on macOS on my old MacBook Air, this issue was not apparent, but on Ubuntu, on a Lenovo ThinkPad with a larger screen, when the window is resized to be smaller than its initial size, there are certain sizes at which some of the lane markers disappear. As the window is reduced, lanes pop in and out of existence. At each size, a different selection of lanes is visible.
-
 ### Windows
 
 Someone reported the following error when trying to compile on Windows, which I haven't experimeted with yet:

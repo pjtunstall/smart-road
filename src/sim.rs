@@ -80,7 +80,6 @@ fn setup() -> (sdl2::Sdl, Canvas<Window>, Dimensions) {
             dimensions.window_height as u32,
         )
         .position_centered()
-        .resizable()
         .build()
         .unwrap();
 
