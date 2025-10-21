@@ -260,7 +260,7 @@ impl Car {
         prospective_positions: &Vec<(i32, i32, usize)>,
         dimensions: &Dimensions,
         birthdays: &Vec<Instant>,
-        colors: &Vec<usize>,
+        _colors: &Vec<usize>,
     ) -> bool {
         for other in prospective_positions {
             if other.2 == self.index {
@@ -268,7 +268,7 @@ impl Car {
             }
             let other_birthday = birthdays[other.2];
             let self_birthday = birthdays[self.index];
-            if other_birthday > self_birthday && colors[other.2] == colors[self.index] {
+            if other_birthday > self_birthday {
                 continue; // Don't collide with cars of the same color that spawned after you; you have right of way, e.g. if you're turning and they're right behind you.
             }
             if new_x < other.0 + dimensions.lane_width
