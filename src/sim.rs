@@ -56,9 +56,9 @@ fn setup() -> (sdl2::Sdl, Canvas<Window>, Dimensions) {
 
     let lane_width = (16.0 * inches * ddpi / (1024.3201 * 134.4)) as i32;
     let speed = Speed {
-        fast: lane_width * 3 / 4 as i32,
-        default: lane_width / 2 as i32,
-        slow: lane_width / 4 as i32,
+        fast: lane_width * 3 / 8 as i32,
+        default: lane_width / 4 as i32,
+        slow: lane_width / 8 as i32,
     };
 
     let window_width = window_width as i32;
@@ -107,7 +107,7 @@ fn run(
 ) {
     let mut event_pump = sdl_context.event_pump().unwrap();
     let mut last_keypress_time = Instant::now();
-    let keypress_interval = Duration::from_millis(128); // Change, e.g. from 128 to 32 to see gridlock.
+    let keypress_interval = Duration::from_millis(256); // Change to a lower value to see gridlock.
     let mut start_time = Instant::now();
     let mut is_fullscreen = false;
 
