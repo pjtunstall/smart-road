@@ -14,5 +14,5 @@ fn main() {
     let mut traffic = Traffic::new();
     sim::simulate(&mut traffic);
     let s = traffic.format();
-    stats::show(&s);
+    stats::show(s);
 }

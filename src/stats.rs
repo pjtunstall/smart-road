@@ -1,9 +1,9 @@
 use druid::{
-    commands, keyboard_types::Key, widget::Label, AppDelegate, AppLauncher, Command, DelegateCtx,
-    Env, Event, Handled, Point, Screen, Target, Widget, WidgetExt, WindowDesc, WindowId,
+    AppDelegate, AppLauncher, Command, DelegateCtx, Env, Event, Handled, Point, Screen, Target,
+    Widget, WidgetExt, WindowDesc, WindowId, commands, keyboard_types::Key, widget::Label,
 };
 
-pub fn show(s: &str) {
+pub fn show(s: String) {
     let screen = Screen::get_monitors()[0].virtual_rect();
     let x = screen.x0 + (screen.x1 - screen.x0) / 2.0;
     let y = screen.y0 + (screen.y1 - screen.y0) / 2.0;
@@ -58,7 +58,7 @@ impl AppDelegate<()> for Delegate {
     }
 }
 
-fn ui_builder(s: &str) -> impl Widget<()> {
+fn ui_builder(s: String) -> impl Widget<()> {
     Label::new(s).center().on_click(|ctx, _, _| {
         ctx.submit_command(commands::CLOSE_WINDOW.to(ctx.window_id()));
     })

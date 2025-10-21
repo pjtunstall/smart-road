@@ -41,7 +41,12 @@ impl Traffic {
             let slowest_speed = if self.give_ways == 0 { 250 } else { 0 };
             format!(
                 "Crashes: 0\nNear misses: 0\nGive ways: {}\nCars passed: {}\nSlowest speed: {}px/s\nFastest speed: 1000px/s\nMax time: {:.2}s\nMin time: {:.2}s",
-                self.give_ways, self.cars_passed, slowest_speed, self.max_time.as_secs_f64(), self.min_time.as_secs_f64())
+                self.give_ways,
+                self.cars_passed,
+                slowest_speed,
+                self.max_time.as_secs_f64(),
+                self.min_time.as_secs_f64()
+            )
         }
     }
 
@@ -52,7 +57,7 @@ impl Traffic {
 
     pub fn push_random(&mut self, dimensions: &Dimensions) {
         let directions = [Airt::Up, Airt::Down, Airt::Left, Airt::Right];
-        let random_direction = directions[rand::thread_rng().gen_range(0..directions.len())];
+        let random_direction = directions[rand::rng().random_range(0..directions.len())];
         self.cars
             .push(Car::spawn(random_direction, self.cars.len(), &dimensions));
     }
@@ -131,7 +136,7 @@ impl Car {
         let mut speed = dimensions.speed.default;
         let vertical;
 
-        let r = rand::thread_rng().gen_range(0..3);
+        let r = rand::rng().random_range(0..3);
 
         match &initial_direction {
             Airt::Up => {

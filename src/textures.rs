@@ -93,12 +93,12 @@ pub fn create_speckled_texture<'a>(
             texture_canvas.set_draw_color(Color::RGBA(0, 0, 0, 0));
             texture_canvas.clear();
 
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
             for _ in 0..255 {
-                let x = rng.gen_range(0..width as i32);
-                let y = rng.gen_range(0..height as i32);
-                let size = rng.gen_range(1..4);
-                let gray = rng.gen_range(128..255);
+                let x = rng.random_range(0..width as i32);
+                let y = rng.random_range(0..height as i32);
+                let size = rng.random_range(1..4);
+                let gray = rng.random_range(128..255);
 
                 texture_canvas.set_draw_color(Color::RGBA(gray, gray, gray, 255));
                 texture_canvas
