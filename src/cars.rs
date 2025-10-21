@@ -266,11 +266,13 @@ impl Car {
             if other.2 == self.index {
                 continue; // Don't collide with yourself.
             }
+
             let other_birthday = birthdays[other.2];
             let self_birthday = birthdays[self.index];
             if other_birthday > self_birthday && colors[other.2] == colors[self.index] {
                 continue; // Don't collide with cars of the same color that spawned after you; you have right of way, e.g. if you're turning and they're right behind you.
             }
+
             if new_x < other.0 + dimensions.lane_width
                 && new_x + dimensions.lane_width > other.0
                 && new_y < other.1 + dimensions.lane_width
