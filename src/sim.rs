@@ -107,7 +107,7 @@ fn run(
 ) {
     let mut event_pump = sdl_context.event_pump().unwrap();
     let mut last_keypress_time = Instant::now();
-    let keypress_interval = Duration::from_millis(256); // Change to a lower value to see gridlock.
+    let keypress_interval = Duration::from_millis(360); // Change to a lower value to see gridlock.
     let mut start_time = Instant::now();
     let mut is_fullscreen = false;
 

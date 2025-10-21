@@ -72,6 +72,16 @@ impl Traffic {
             .iter()
             .map(|car| (car.x, car.y, car.index)) // The `index` is used to ignore "collisions" of a car with itself.
             .collect::<Vec<(i32, i32, usize)>>();
+        let birthdays = self
+            .cars
+            .iter()
+            .map(|car| car.birthday)
+            .collect::<Vec<Instant>>();
+        let colors = self
+            .cars
+            .iter()
+            .map(|car| car.color_code)
+            .collect::<Vec<usize>>();
 
         for car in self.cars.iter_mut() {
             if !car.update(
@@ -80,6 +90,8 @@ impl Traffic {
                 &mut self.max_time,
                 &mut self.min_time,
                 &dimensions,
+                &birthdays,
+                &colors,
             ) {
                 self.give_ways += 1;
             }
@@ -247,10 +259,17 @@ impl Car {
         new_y: i32,
         prospective_positions: &Vec<(i32, i32, usize)>,
         dimensions: &Dimensions,
+        birthdays: &Vec<Instant>,
+        colors: &Vec<usize>,
     ) -> bool {
         for other in prospective_positions {
             if other.2 == self.index {
-                continue;
+                continue; // Don't collide with yourself.
+            }
+            let other_birthday = birthdays[other.2];
+            let self_birthday = birthdays[self.index];
+            if other_birthday > self_birthday && colors[other.2] == colors[self.index] {
+                continue; // Don't collide with cars of the same color that spawned after you; you have right of way, e.g. if you're turning and they're right behind you.
             }
             if new_x < other.0 + dimensions.lane_width
                 && new_x + dimensions.lane_width > other.0
@@ -270,6 +289,8 @@ impl Car {
         max_time: &mut Duration,
         min_time: &mut Duration,
         dimensions: &Dimensions,
+        birthdays: &Vec<Instant>,
+        colors: &Vec<usize>,
     ) -> bool {
         if self.x < 0
             || self.x + dimensions.lane_width > dimensions.window_width
@@ -290,7 +311,14 @@ impl Car {
 
         let (new_x, new_y) = self.calculate_new_position(dimensions);
 
-        if self.will_collide(new_x, new_y, prospective_positions, dimensions) {
+        if self.will_collide(
+            new_x,
+            new_y,
+            prospective_positions,
+            dimensions,
+            birthdays,
+            colors,
+        ) {
             return false;
         }
 
